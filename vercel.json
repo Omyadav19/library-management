@@ -13,6 +13,7 @@
   ],
   "env": {
     "DJANGO_SETTINGS_MODULE": "libra_project.settings",
-    "WSGI_APPLICATION": "libra_project.wsgi.application"
+    "WSGI_APPLICATION": "libra_project.wsgi.application",
+    "DISABLE_COLLECTSTATIC": "1"
   }
 }
