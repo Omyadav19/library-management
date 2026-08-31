@@ -1,5 +1,6 @@
 import os
 import json
+from pathlib import Path
 from datetime import datetime, date, timedelta
 from typing import Optional
 
@@ -21,6 +22,8 @@ from library.db import (
     generate_uuid
 )
 
+BASE_DIR = Path(__file__).resolve().parent
+
 app = FastAPI(title="LIBRA - Library Management System")
 
 # Session middleware for flash messages
@@ -28,10 +31,13 @@ SECRET_KEY = os.getenv("SECRET_KEY", "libra-super-secret-key-fastapi-2026")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+static_dir = BASE_DIR / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Templates
-templates = Jinja2Templates(directory="templates")
+templates_dir = BASE_DIR / "templates"
+templates = Jinja2Templates(directory=str(templates_dir))
 
 # Helper for flash messages in sessions
 def flash(request: Request, message: str, category: str = "info"):
