@@ -3,10 +3,13 @@
 import os
 import sys
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'libra_project.settings')
 
 def main():
     """Run administrative tasks."""
+    # Using assignment instead of setdefault to prevent Vercel's buggy Django detector 
+    # from parsing this file and throwing a ModuleNotFoundError on build.
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'libra_project.settings'
+    
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
