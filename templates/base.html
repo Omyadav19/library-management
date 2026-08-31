@@ -25,10 +25,10 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Flask Flash Messages as Toasts -->
+<!-- Flash Messages as Toasts -->
 {% if messages %}
-  {% for message in messages %}
-      <div data-toast data-type="{{ message.tags }}" data-message="{{ message }}" style="display:none"></div>
+  {% for m in messages %}
+      <div data-toast data-type="{{ m.tags if m is mapping else 'info' }}" data-message="{{ m.message if m is mapping else m }}" style="display:none"></div>
     {% endfor %}
 {% endif %}
 
