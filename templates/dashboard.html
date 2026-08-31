@@ -121,32 +121,52 @@
     </div>
 
     {% if stats.recent_books %}
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px;">
+      {% set book_gradients = [
+        "linear-gradient(145deg, #4f46e5 0%, #7c3aed 100%)",
+        "linear-gradient(145deg, #059669 0%, #0d9488 100%)",
+        "linear-gradient(145deg, #ea580c 0%, #f59e0b 100%)",
+        "linear-gradient(145deg, #db2777 0%, #9333ea 100%)"
+      ] %}
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 16px;">
         {% for book in stats.recent_books[:4] %}
-          <div style="display: flex; flex-direction: column; cursor: pointer; transition: transform var(--transition-fast);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
-            <!-- Graphical Cover -->
-            <div style="aspect-ratio: 2/3; border-radius: var(--radius-md); background: linear-gradient(135deg, #1e293b, #0f172a); box-shadow: var(--shadow-sm); position: relative; overflow: hidden; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px;">
+          {% set grad = book_gradients[loop.index0 % 4] %}
+          <a href="/books?search={{ book.title|urlencode }}" style="display: flex; flex-direction: column; text-decoration: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;" onmouseover="this.style.transform='translateY(-6px)'; this.querySelector('.book-cover-art').style.boxShadow='0 12px 24px -6px rgba(0,0,0,0.3)';" onmouseout="this.style.transform='translateY(0)'; this.querySelector('.book-cover-art').style.boxShadow='0 6px 14px -3px rgba(0,0,0,0.15)';">
+            <!-- Graphical Realistic Book Cover -->
+            <div class="book-cover-art" style="aspect-ratio: 2/3; border-radius: 8px 12px 12px 8px; background: {{ grad }}; box-shadow: 0 6px 14px -3px rgba(0,0,0,0.15); position: relative; overflow: hidden; margin-bottom: 10px; display: flex; flex-direction: column; justify-content: space-between; padding: 12px 10px; transition: all 0.3s ease;">
               
-              <!-- Faux Cover Design -->
-              <div style="font-family: var(--font-display); font-weight: 800; font-size: 14px; line-height: 1.1; color: #f8fafc; text-transform: uppercase;">
-                {{ book.title[:20] }}
+              <!-- 3D Book Spine Overlay -->
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: linear-gradient(90deg, rgba(0,0,0,0.3) 0%, rgba(255,255,255,0.15) 50%, rgba(0,0,0,0.2) 100%);"></div>
+              
+              <!-- Top Genre Tag & Decorative Accent -->
+              <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 4px;">
+                <span style="font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: 0.8px; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; backdrop-filter: blur(4px);">
+                  {{ book.genre or 'BOOK' }}
+                </span>
+                <span style="font-size: 10px; color: rgba(255,255,255,0.7);">✨</span>
               </div>
-              <div style="position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 8px; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 1px;">
-                {{ book.author[:15] }}
+
+              <!-- Title in Cover -->
+              <div style="padding: 0 4px; text-align: center; margin: auto 0;">
+                <div style="font-family: var(--font-display); font-weight: 800; font-size: 12px; line-height: 1.25; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                  {{ book.title }}
+                </div>
               </div>
-              <!-- Decorative lines -->
-              <div style="position: absolute; top: 12px; left: 12px; width: 4px; height: 20px; background: currentColor; opacity: 0.3;"></div>
+
+              <!-- Author in Cover -->
+              <div style="text-align: center; font-size: 9px; color: rgba(255,255,255,0.9); font-weight: 600; letter-spacing: 0.5px; text-transform: capitalize; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ book.author }}
+              </div>
 
             </div>
             
-            <!-- Info below cover -->
-            <div style="font-weight: 700; font-size: 13px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-bottom: 4px;">
+            <!-- Info Below Cover -->
+            <div style="font-weight: 700; font-size: 13px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-bottom: 2px;">
               {{ book.title }}
             </div>
-            <div style="font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <div style="font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
               {{ book.author }}
             </div>
-          </div>
+          </a>
         {% endfor %}
       </div>
     {% else %}
