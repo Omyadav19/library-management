@@ -1,8 +1,12 @@
+import os
 from pymongo import MongoClient
 import uuid
 
 # Connect to MongoDB Atlas instance
-client = MongoClient('mongodb+srv://ryadavom94_db_user:BwEBqDgtkexAOE0X@cluster1.9irbojt.mongodb.net/?appName=Cluster1', serverSelectionTimeoutMS=5000)
+mongo_uri = os.getenv('MONGO_URI')
+if not mongo_uri:
+    raise ValueError("MONGO_URI environment variable is not set. Check your .env file or Vercel environment variables.")
+client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
 
 # Select the library database
 db = client['library_db']

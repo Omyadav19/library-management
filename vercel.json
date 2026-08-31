@@ -10,5 +10,9 @@
       "src": "/(.*)",
       "dest": "libra_project/wsgi.py"
     }
-  ]
+  ],
+  "env": {
+    "DJANGO_SETTINGS_MODULE": "libra_project.settings",
+    "WSGI_APPLICATION": "libra_project.wsgi.application"
+  }
 }
