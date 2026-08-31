@@ -266,14 +266,5 @@
 <script src="/static/js/app.js"></script>
 {% block scripts %}{% endblock %}
 
-<script>
-// Check for overdue to show notification dot
-fetch('/overdue/').then(r => r.text()).then(html => {
-  const hasOverdue = html.includes('overdue-card');
-  const dot = document.getElementById('overdotEl');
-  if (dot && hasOverdue) dot.style.display = 'block';
-}).catch(() => {});
-</script>
-
 </body>
 </html>

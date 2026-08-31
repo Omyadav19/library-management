@@ -81,16 +81,33 @@ def format_issue(i):
 def get_activity_data(days: int = 30):
     today = date.today()
     start = today - timedelta(days=days)
+    start_str = start.strftime("%Y-%m-%d")
+    
+    # Query all matching records in one go instead of 2 * days separate round trips
+    records = list(issues_collection.find(
+        {"$or": [{"issue_date": {"$gte": start_str}}, {"return_date": {"$gte": start_str}}]},
+        {"issue_date": 1, "return_date": 1, "_id": 0}
+    ))
+    
+    issue_counts = {}
+    return_counts = {}
+    for r in records:
+        idate = r.get("issue_date")
+        rdate = r.get("return_date")
+        if idate:
+            issue_counts[idate] = issue_counts.get(idate, 0) + 1
+        if rdate:
+            return_counts[rdate] = return_counts.get(rdate, 0) + 1
+            
     labels = []
     issued_data = []
     returned_data = []
-    
     for i in range(days + 1):
         d = start + timedelta(days=i)
         d_str = d.strftime("%Y-%m-%d")
         labels.append(d_str)
-        issued_data.append(issues_collection.count_documents({"issue_date": d_str}))
-        returned_data.append(issues_collection.count_documents({"return_date": d_str}))
+        issued_data.append(issue_counts.get(d_str, 0))
+        returned_data.append(return_counts.get(d_str, 0))
         
     return {"labels": labels, "issued": issued_data, "returned": returned_data}
 
@@ -122,10 +139,27 @@ async def dashboard(request: Request):
     overdue_qs = list(issues_collection.find({"status": "issued", "due_date": {"$lt": today_str}}).sort("due_date", 1))
     overdue_count = len(overdue_qs)
     
+    recent_transactions = [format_issue(i) for i in issues_collection.find().sort([("issue_date", -1), ("_id", -1)]).limit(6)]
+    
+    # Collect all needed book IDs for batch lookup in ONE round-trip
+    needed_book_ids = set()
+    for r in overdue_qs:
+        if r.get("book_id"):
+            needed_book_ids.add(r["book_id"])
+    for r in recent_transactions:
+        if r.get("book_id"):
+            needed_book_ids.add(r["book_id"])
+            
+    books_map = {}
+    if needed_book_ids:
+        for b in books_collection.find({"_id": {"$in": list(needed_book_ids)}}):
+            books_map[b["_id"]] = b
+            
+    fine_rate = get_fine_rate()
     overdue_list = []
     for r in overdue_qs:
         r = format_issue(r)
-        book = format_book(books_collection.find_one({"_id": r["book_id"]}))
+        book = books_map.get(r["book_id"])
         if book:
             r["book_title"] = book.get("title")
             r["book_author"] = book.get("author")
@@ -133,9 +167,14 @@ async def dashboard(request: Request):
         due_date_obj = datetime.strptime(r["due_date"], "%Y-%m-%d").date()
         days_overdue = (today_date - due_date_obj).days
         r["days_overdue"] = days_overdue
-        r["estimated_fine"] = days_overdue * get_fine_rate()
+        r["estimated_fine"] = days_overdue * fine_rate
         overdue_list.append(r)
         
+    for r in recent_transactions:
+        book = books_map.get(r["book_id"])
+        if book:
+            r["book_title"] = book.get("title")
+            
     fines_pipeline = [
         {"$match": {"status": "returned"}},
         {"$group": {"_id": None, "fines_collected": {"$sum": "$fine"}}}
@@ -155,12 +194,6 @@ async def dashboard(request: Request):
 
     total_members = len(issues_collection.distinct("member_id"))
     total_issues_ever = issues_collection.count_documents({})
-    recent_transactions = [format_issue(i) for i in issues_collection.find().sort([("issue_date", -1), ("_id", -1)]).limit(6)]
-    
-    for r in recent_transactions:
-        book = format_book(books_collection.find_one({"_id": r["book_id"]}))
-        if book:
-            r["book_title"] = book.get("title")
 
     availability_pct = round((available / total_books) * 100) if total_books > 0 else 0
     issued_pct = round((issued_count / total_books) * 100) if total_books > 0 else 0
@@ -507,10 +540,16 @@ async def issued_view(request: Request):
     today_date = date.today()
     records = [format_issue(i) for i in issues_collection.find({"status": "issued"})]
     
+    book_ids = [r["book_id"] for r in records if r.get("book_id")]
+    books_map = {}
+    if book_ids:
+        for b in books_collection.find({"_id": {"$in": list(set(book_ids))}}):
+            books_map[b["_id"]] = b
+            
     for r in records:
         due_date_obj = datetime.strptime(r["due_date"], "%Y-%m-%d").date()
         r["days_remaining"] = (due_date_obj - today_date).days
-        book = format_book(books_collection.find_one({"_id": r["book_id"]}))
+        book = books_map.get(r.get("book_id"))
         if book:
             r["book_title"] = book.get("title")
             r["book_author"] = book.get("author")
@@ -525,6 +564,13 @@ async def overdue_view(request: Request):
     today_str = today_date.strftime("%Y-%m-%d")
     overdue_qs = list(issues_collection.find({"status": "issued", "due_date": {"$lt": today_str}}))
     
+    book_ids = [r["book_id"] for r in overdue_qs if r.get("book_id")]
+    books_map = {}
+    if book_ids:
+        for b in books_collection.find({"_id": {"$in": list(set(book_ids))}}):
+            books_map[b["_id"]] = b
+            
+    fine_rate = get_fine_rate()
     overdue_list = []
     total_fine = 0
     
@@ -533,10 +579,10 @@ async def overdue_view(request: Request):
         due_date_obj = datetime.strptime(r["due_date"], "%Y-%m-%d").date()
         days_overdue = (today_date - due_date_obj).days
         r["days_overdue"] = days_overdue
-        r["estimated_fine"] = days_overdue * get_fine_rate()
+        r["estimated_fine"] = days_overdue * fine_rate
         total_fine += r["estimated_fine"]
         
-        book = format_book(books_collection.find_one({"_id": r["book_id"]}))
+        book = books_map.get(r.get("book_id"))
         if book:
             r["book_title"] = book.get("title")
             r["book_author"] = book.get("author")
@@ -579,16 +625,23 @@ async def member_history_post(
             current = sum(1 for r in all_records if r.get("status") == "issued")
             total_fine = sum(r.get("fine", 0) for r in all_records if r.get("status") == "returned")
             
+            book_ids = [r["book_id"] for r in all_records if r.get("book_id")]
+            books_map = {}
+            if book_ids:
+                for b in books_collection.find({"_id": {"$in": list(set(book_ids))}}):
+                    books_map[b["_id"]] = b
+                    
+            fine_rate = get_fine_rate()
             for r in all_records:
                 r = format_issue(r)
-                book = format_book(books_collection.find_one({"_id": r["book_id"]}))
+                book = books_map.get(r.get("book_id"))
                 if book:
                     r["book_title"] = book.get("title")
                     
                 if r.get("status") == "issued":
                     due_date_obj = datetime.strptime(r["due_date"], "%Y-%m-%d").date()
                     days_overdue = (today_date - due_date_obj).days
-                    r["estimated_fine"] = days_overdue * get_fine_rate() if days_overdue > 0 else 0
+                    r["estimated_fine"] = days_overdue * fine_rate if days_overdue > 0 else 0
                     r["days_remaining"] = (due_date_obj - today_date).days
                 records.append(r)
                 
