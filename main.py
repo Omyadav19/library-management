@@ -215,6 +215,7 @@ async def dashboard(request: Request):
         "overdue_list": overdue_list,
         "overdue_len": len(overdue_list),
         "activity_7": activity_7,
+        "activity_7_json": json.dumps(activity_7),
         "total_members": total_members,
         "total_issues_ever": total_issues_ever,
         "recent_transactions": recent_transactions,

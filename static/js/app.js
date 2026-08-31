@@ -370,8 +370,17 @@ async function initActivityChart() {
   const canvas = document.getElementById('activityChart');
   if (!canvas) return;
 
-  const res  = await fetch('/api/activity/?days=7');
-  const data = await res.json();
+  let data = null;
+  if (canvas.dataset.activity) {
+    try {
+      data = JSON.parse(canvas.dataset.activity);
+    } catch(e) {}
+  }
+
+  if (!data) {
+    const res  = await fetch('/api/activity/?days=7');
+    data = await res.json();
+  }
 
   const ctx = canvas.getContext('2d');
   
