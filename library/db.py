@@ -2,9 +2,11 @@ import os
 from pymongo import MongoClient
 import uuid
 
-mongo_uri = os.getenv('MONGO_URI')
+# Fallback URI if environment variable is not explicitly injected in Vercel UI
+DEFAULT_MONGO_URI = "mongodb+srv://ryadavom94_db_user:BwEBqDgtkexAOE0X@cluster1.9irbojt.mongodb.net/?appName=Cluster1"
+mongo_uri = os.getenv('MONGO_URI') or DEFAULT_MONGO_URI
 
-if mongo_uri:
+try:
     client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
     db = client['library_db']
     books_collection = db['books']
@@ -15,16 +17,15 @@ if mongo_uri:
         issues_collection.create_index('issue_id', unique=True)
     except Exception:
         pass
-else:
-    client = None
-    db = None
-    books_collection = None
-    issues_collection = None
-    config_collection = None
+except Exception as e:
+    print(f"MongoDB connection error: {e}")
+    client = MongoClient(DEFAULT_MONGO_URI, serverSelectionTimeoutMS=5000)
+    db = client['library_db']
+    books_collection = db['books']
+    issues_collection = db['issues']
+    config_collection = db['config']
 
 def get_config():
-    if config_collection is None:
-        return {'_id': 'system_config', 'fine_per_day': 5}
     try:
         config = config_collection.find_one({'_id': 'system_config'})
         if not config:
@@ -35,15 +36,14 @@ def get_config():
         return {'_id': 'system_config', 'fine_per_day': 5}
 
 def set_fine_rate(fine_per_day):
-    if config_collection is not None:
-        try:
-            config_collection.update_one(
-                {'_id': 'system_config'},
-                {'$set': {'fine_per_day': fine_per_day}},
-                upsert=True
-            )
-        except Exception:
-            pass
+    try:
+        config_collection.update_one(
+            {'_id': 'system_config'},
+            {'$set': {'fine_per_day': fine_per_day}},
+            upsert=True
+        )
+    except Exception:
+        pass
     
 def generate_uuid():
     return str(uuid.uuid4())
