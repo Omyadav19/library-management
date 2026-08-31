@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+
 
 {% block title %}Dashboard{% endblock %}
 {% block greeting %}{{ greeting }}, Librarian 👋{% endblock %}
@@ -117,22 +117,22 @@
         <div class="chart-title">🆕 Recently Added</div>
         <div class="chart-subtitle">Latest additions to your collection</div>
       </div>
-      <a href="{% url 'books' %}" class="btn btn-secondary btn-sm">View all →</a>
+      <a href="/books" class="btn btn-secondary btn-sm">View all →</a>
     </div>
 
     {% if stats.recent_books %}
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px;">
-        {% for book in stats.recent_books|slice:":4" %}
+        {% for book in stats.recent_books[:4] %}
           <div style="display: flex; flex-direction: column; cursor: pointer; transition: transform var(--transition-fast);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
             <!-- Graphical Cover -->
-            <div style="aspect-ratio: 2/3; border-radius: var(--radius-md); background: {% cycle 'linear-gradient(135deg, #1e293b, #0f172a)' 'linear-gradient(135deg, #fef3c7, #fbbf24)' 'linear-gradient(135deg, #064e3b, #022c22)' 'linear-gradient(135deg, #7f1d1d, #450a0a)' 'linear-gradient(135deg, #4c1d95, #2e1065)' %}; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px;">
+            <div style="aspect-ratio: 2/3; border-radius: var(--radius-md); background: linear-gradient(135deg, #1e293b, #0f172a); box-shadow: var(--shadow-sm); position: relative; overflow: hidden; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px;">
               
               <!-- Faux Cover Design -->
-              <div style="font-family: var(--font-display); font-weight: 800; font-size: 14px; line-height: 1.1; color: {% cycle '#f8fafc' '#1e293b' '#f8fafc' '#f8fafc' '#f8fafc' %}; text-transform: uppercase;">
-                {{ book.title|truncatechars:20 }}
+              <div style="font-family: var(--font-display); font-weight: 800; font-size: 14px; line-height: 1.1; color: #f8fafc; text-transform: uppercase;">
+                {{ book.title[:20] }}
               </div>
-              <div style="position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 8px; color: {% cycle '#94a3b8' '#92400e' '#a7f3d0' '#fca5a5' '#c4b5fd' %}; text-transform: uppercase; font-weight: 600; letter-spacing: 1px;">
-                {{ book.author|truncatechars:15 }}
+              <div style="position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 8px; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 1px;">
+                {{ book.author[:15] }}
               </div>
               <!-- Decorative lines -->
               <div style="position: absolute; top: 12px; left: 12px; width: 4px; height: 20px; background: currentColor; opacity: 0.3;"></div>
@@ -152,7 +152,7 @@
     {% else %}
       <div class="empty-state" style="padding: var(--spacing-xl)">
         <div class="empty-icon" style="font-size:36px">📚</div>
-        <div class="empty-subtitle">No books yet. <a href="{% url 'add_book' %}" style="color:var(--indigo-light)">Add the first one →</a></div>
+        <div class="empty-subtitle">No books yet. <a href="/add_book" style="color:var(--indigo-light)">Add the first one →</a></div>
       </div>
     {% endif %}
   </div>
@@ -170,13 +170,13 @@
           {% endif %}
         </div>
       </div>
-      <a href="{% url 'overdue' %}" class="btn btn-secondary btn-sm">View overdue →</a>
+      <a href="/overdue" class="btn btn-secondary btn-sm">View overdue →</a>
     </div>
 
     {% if stats.overdue_list %}
       <div style="display:flex; flex-direction:column; gap:10px">
         {% for item in stats.overdue_list %}
-          {% if forloop.counter <= 4 %}
+          {% if loop.index <= 4 %}
           <div style="background:rgba(244,63,94,0.06); border:1px solid rgba(244,63,94,0.15);
                       border-radius:var(--radius-lg); padding:14px">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px">
@@ -202,7 +202,7 @@
           {% endif %}
         {% endfor %}
 
-        <a href="{% url 'overdue' %}" class="btn btn-danger btn-sm btn-full" style="margin-top:4px">
+        <a href="/overdue" class="btn btn-danger btn-sm btn-full" style="margin-top:4px">
           Process Returns →
         </a>
       </div>
@@ -280,37 +280,37 @@
   <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px;">
     
     <!-- Add Book -->
-    <a href="{% url 'add_book' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(139, 92, 246, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(139, 92, 246, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+    <a href="/add_book" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(139, 92, 246, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(139, 92, 246, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
       <div style="width: 48px; height: 48px; border-radius: 50%; background: #f3e8ff; color: #7e22ce; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">➕</div>
       <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Add Book</span>
     </a>
 
     <!-- Issue Book -->
-    <a href="{% url 'issue_book' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(59, 130, 246, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(59, 130, 246, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+    <a href="/issue_book" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(59, 130, 246, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(59, 130, 246, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
       <div style="width: 48px; height: 48px; border-radius: 50%; background: #e0f2fe; color: #0369a1; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">📤</div>
       <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Issue Book</span>
     </a>
 
     <!-- Return Book -->
-    <a href="{% url 'return_book' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(16, 185, 129, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(16, 185, 129, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+    <a href="/return_book" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(16, 185, 129, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(16, 185, 129, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
       <div style="width: 48px; height: 48px; border-radius: 50%; background: #ecfdf5; color: #047857; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">📥</div>
       <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Return Book</span>
     </a>
 
     <!-- Search Library -->
-    <a href="{% url 'search' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(245, 158, 11, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(245, 158, 11, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+    <a href="/search" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(245, 158, 11, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(245, 158, 11, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
       <div style="width: 48px; height: 48px; border-radius: 50%; background: #fef3c7; color: #b45309; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">🔎</div>
       <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Search</span>
     </a>
 
     <!-- Member History -->
-    <a href="{% url 'member_history' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(217, 70, 239, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(217, 70, 239, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+    <a href="/member_history" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(217, 70, 239, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(217, 70, 239, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
       <div style="width: 48px; height: 48px; border-radius: 50%; background: #fae8ff; color: #a21caf; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">👤</div>
       <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Members</span>
     </a>
 
     <!-- Reports -->
-    <a href="{% url 'report' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(99, 102, 241, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(99, 102, 241, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+    <a href="/report" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(99, 102, 241, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(99, 102, 241, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
       <div style="width: 48px; height: 48px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">📊</div>
       <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Reports</span>
     </a>
@@ -324,7 +324,7 @@
       <div class="chart-title">Recent Transactions</div>
       <div class="chart-subtitle">Latest checkouts and returns</div>
     </div>
-    <a href="{% url 'member_history' %}" class="btn btn-secondary btn-sm" style="border:none; color:var(--text-muted)">View all</a>
+    <a href="/member_history" class="btn btn-secondary btn-sm" style="border:none; color:var(--text-muted)">View all</a>
   </div>
 
   {% if stats.recent_transactions %}
@@ -348,13 +348,13 @@
                 </div>
               </td>
               <td style="padding: 16px; font-size: 14px; color: var(--text-secondary);">
-                {{ r.book.title|truncatechars:35 }}
+                {{ (r.book_title or '')[:35] }}
               </td>
               <td style="padding: 16px; font-size: 13px; color: var(--text-muted);">
                 {% if r.status == 'issued' %}
-                  {{ r.issue_date|date:"M d, Y" }}
+                  {{ r.issue_date }}
                 {% else %}
-                  {{ r.return_date|date:"M d, Y" }}
+                  {{ r.return_date }}
                 {% endif %}
               </td>
               <td style="padding: 16px; text-align: right;">

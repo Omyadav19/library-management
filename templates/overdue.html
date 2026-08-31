@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+
 
 {% block title %}Overdue Books{% endblock %}
 {% block greeting %}Overdue Books{% endblock %}
@@ -57,13 +57,13 @@
           </div>
 
           <div style="display:flex; flex-direction:column; gap:8px; flex-shrink:0">
-            <form method="POST" action="{% url 'return_book' %}">
-              {% csrf_token %}
+            <form method="POST" action="/return_book">
+              
               <input type="hidden" name="action" value="search">
               <input type="hidden" name="issue_id" value="{{ item.issue_id }}">
               <button type="submit" class="btn btn-danger btn-sm">Process Return →</button>
             </form>
-            <a href="{% url 'member_history' %}" class="btn btn-secondary btn-sm">View Member</a>
+            <a href="/member_history" class="btn btn-secondary btn-sm">View Member</a>
           </div>
         </div>
 
@@ -82,8 +82,8 @@
       <div class="empty-title">Everything is on schedule</div>
       <div class="empty-subtitle">There are no overdue books at the moment. Great job keeping the library on track!</div>
       <div style="display:flex; gap:12px; justify-content:center; margin-top:32px">
-        <a href="{% url 'issued' %}" class="btn btn-secondary">📖 View Issued</a>
-        <a href="{% url 'dashboard' %}" class="btn btn-primary">🏠 Dashboard</a>
+        <a href="/issued" class="btn btn-secondary">📖 View Issued</a>
+        <a href="/" class="btn btn-primary">🏠 Dashboard</a>
       </div>
     </div>
   </div>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+
 
 {% block title %}Search Books{% endblock %}
 {% block greeting %}Search Library{% endblock %}
@@ -12,7 +12,7 @@
   <p class="page-subtitle">Instant search across your entire collection.</p>
 </div>
 
-<form method="GET" action="{% url 'search' %}" id="searchForm">
+<form method="GET" action="/search" id="searchForm">
   <div class="search-wrapper" style="margin-bottom: var(--spacing-xl)">
     <span class="search-icon" style="font-size:20px; left:18px">🔎</span>
     <input type="text" id="searchInput" name="q" class="form-input search-big"
@@ -21,10 +21,10 @@
   </div>
 
   <div class="filter-chips" role="group" aria-label="Genre filters">
-    <a href="{% url 'search' %}?q={{ query }}&genre=All"
+    <a href="/search?q={{ query }}&genre=All"
        class="filter-chip {% if genre_filter == 'All' %}active{% endif %}">All</a>
     {% for g in all_genres_list %}
-      <a href="{% url 'search' %}?q={{ query }}&genre={{ g }}"
+      <a href="/search?q={{ query }}&genre={{ g }}"
          class="filter-chip {% if genre_filter == g %}active{% endif %}">{{ g }}</a>
     {% endfor %}
   </div>
@@ -74,7 +74,7 @@
             <td>
               <div class="action-icons">
                 {% if book.available_copies > 0 %}
-                  <a href="{% url 'issue_book' %}?book_id={{ book.id }}" class="icon-btn success" data-tip="Issue">📤</a>
+                  <a href="/issue_book?book_id={{ book.id }}" class="icon-btn success" data-tip="Issue">📤</a>
                 {% endif %}
                 <button class="icon-btn danger" data-tip="Delete"
                         onclick="openDeleteModal('{{ book.id }}','{{ book.title }}',{{ book.available_copies }},{{ book.total_copies }})">🗑️</button>
@@ -91,7 +91,7 @@
       <div class="empty-icon">🔍</div>
       <div class="empty-title">No books found</div>
       <div class="empty-subtitle">Try different keywords or broaden your search.</div>
-      <a href="{% url 'add_book' %}" class="btn btn-primary" style="margin-top:24px">➕ Add This Book</a>
+      <a href="/add_book" class="btn btn-primary" style="margin-top:24px">➕ Add This Book</a>
     </div>
   </div>
 {% endif %}

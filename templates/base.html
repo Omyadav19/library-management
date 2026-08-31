@@ -1,4 +1,4 @@
-{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="/static/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   {% block head %}{% endblock %}
 </head>
@@ -81,8 +81,8 @@
       <!-- OVERVIEW -->
       <div class="nav-section">
         <div class="nav-section-label">Overview</div>
-        <a href="{% url 'dashboard' %}"
-           class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+        <a href="/"
+           class="nav-item {% if request.url.path == '/' %}active{% endif %}"
            data-tooltip="Dashboard">
           <div class="nav-icon" aria-hidden="true">🏠</div>
           <span class="nav-label">Dashboard</span>
@@ -92,20 +92,20 @@
       <!-- LIBRARY -->
       <div class="nav-section">
         <div class="nav-section-label">Library</div>
-        <a href="{% url 'books' %}"
-           class="nav-item {% if request.resolver_match.url_name == 'books' %}active{% endif %}"
+        <a href="/books"
+           class="nav-item {% if request.url.path.startswith('/books') %}active{% endif %}"
            data-tooltip="All Books">
           <div class="nav-icon" aria-hidden="true">📚</div>
           <span class="nav-label">All Books</span>
         </a>
-        <a href="{% url 'add_book' %}"
-           class="nav-item {% if request.resolver_match.url_name == 'add_book' %}active{% endif %}"
+        <a href="/add_book"
+           class="nav-item {% if request.url.path.startswith('/add_book') %}active{% endif %}"
            data-tooltip="Add Book">
           <div class="nav-icon" aria-hidden="true">➕</div>
           <span class="nav-label">Add Book</span>
         </a>
-        <a href="{% url 'search' %}"
-           class="nav-item {% if request.resolver_match.url_name == 'search' %}active{% endif %}"
+        <a href="/search"
+           class="nav-item {% if request.url.path.startswith('/search') %}active{% endif %}"
            data-tooltip="Search">
           <div class="nav-icon" aria-hidden="true">🔎</div>
           <span class="nav-label">Search Books</span>
@@ -115,26 +115,26 @@
       <!-- TRANSACTIONS -->
       <div class="nav-section">
         <div class="nav-section-label">Transactions</div>
-        <a href="{% url 'issue_book' %}"
-           class="nav-item {% if request.resolver_match.url_name == 'issue_book' %}active{% endif %}"
+        <a href="/issue_book"
+           class="nav-item {% if request.url.path.startswith('/issue_book') %}active{% endif %}"
            data-tooltip="Issue Book">
           <div class="nav-icon" aria-hidden="true">📤</div>
           <span class="nav-label">Issue Book</span>
         </a>
-        <a href="{% url 'return_book' %}"
-           class="nav-item {% if request.resolver_match.url_name == 'return_book' %}active{% endif %}"
+        <a href="/return_book"
+           class="nav-item {% if request.url.path.startswith('/return_book') %}active{% endif %}"
            data-tooltip="Return Book">
           <div class="nav-icon" aria-hidden="true">📥</div>
           <span class="nav-label">Return Book</span>
         </a>
-        <a href="{% url 'issued' %}"
-           class="nav-item {% if request.resolver_match.url_name == 'issued' %}active{% endif %}"
+        <a href="/issued"
+           class="nav-item {% if request.url.path == '/issued' %}active{% endif %}"
            data-tooltip="Issued Books">
           <div class="nav-icon" aria-hidden="true">📖</div>
           <span class="nav-label">Issued Books</span>
         </a>
-        <a href="{% url 'overdue' %}"
-           class="nav-item {% if request.resolver_match.url_name == 'overdue' %}active{% endif %}"
+        <a href="/overdue"
+           class="nav-item {% if request.url.path.startswith('/overdue') %}active{% endif %}"
            data-tooltip="Overdue">
           <div class="nav-icon" aria-hidden="true">⚠️</div>
           <span class="nav-label">Overdue Books</span>
@@ -144,8 +144,8 @@
       <!-- MEMBERS -->
       <div class="nav-section">
         <div class="nav-section-label">Members</div>
-        <a href="{% url 'member_history' %}"
-           class="nav-item {% if request.resolver_match.url_name == 'member_history' %}active{% endif %}"
+        <a href="/member_history"
+           class="nav-item {% if request.url.path.startswith('/member_history') %}active{% endif %}"
            data-tooltip="Member History">
           <div class="nav-icon" aria-hidden="true">👤</div>
           <span class="nav-label">Member History</span>
@@ -155,8 +155,8 @@
       <!-- ANALYTICS -->
       <div class="nav-section">
         <div class="nav-section-label">Analytics</div>
-        <a href="{% url 'report' %}"
-           class="nav-item {% if request.resolver_match.url_name == 'report' %}active{% endif %}"
+        <a href="/report"
+           class="nav-item {% if request.url.path.startswith('/report') %}active{% endif %}"
            data-tooltip="Reports">
           <div class="nav-icon" aria-hidden="true">📊</div>
           <span class="nav-label">Reports</span>
@@ -167,8 +167,8 @@
 
     <!-- Footer -->
     <div class="sidebar-footer">
-      <a href="{% url 'settings' %}"
-         class="nav-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %} mb-sm"
+      <a href="/settings"
+         class="nav-item {% if request.url.path.startswith('/settings') %}active{% endif %} mb-sm"
          data-tooltip="Settings">
         <div class="nav-icon" aria-hidden="true">⚙️</div>
         <span class="nav-label">Settings</span>
@@ -193,7 +193,7 @@
         <div class="topbar-date" id="topbarDate">{% block topdate %}{% endblock %}</div>
       </div>
       <div class="topbar-right">
-        <a href="{% url 'overdue' %}" class="topbar-btn" aria-label="View overdue books" title="Overdue books">
+        <a href="/overdue" class="topbar-btn" aria-label="View overdue books" title="Overdue books">
           🔔
           <span class="notification-dot" id="overdotEl" style="display:none"></span>
         </a>
@@ -239,7 +239,7 @@
     <!-- Confirm state -->
       <div id="deleteConfirmSection" style="display:none">
       <form id="deleteForm" method="POST" action="" onsubmit="event.preventDefault(); submitDelete();">
-        {% csrf_token %}
+        
         <input type="hidden" name="confirm" id="deleteConfirmHidden" value="">
         <div class="form-group">
           <label class="form-label" for="deleteConfirmInput">Type <strong>YES</strong> to confirm deletion</label>
@@ -263,7 +263,7 @@
   </div>
 </div>
 
-<script src="{% static 'js/app.js' %}"></script>
+<script src="/static/js/app.js"></script>
 {% block scripts %}{% endblock %}
 
 <script>

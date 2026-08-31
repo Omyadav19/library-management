@@ -15,8 +15,8 @@
 
   <!-- ── LEFT: Form ── -->
   <div class="card">
-    <form method="POST" action="{% url 'add_book' %}" id="addBookForm" novalidate>
-      {% csrf_token %}
+    <form method="POST" action="/add_book" id="addBookForm" novalidate>
+      
 
       <div class="form-group">
         <label class="form-label" for="title">Book Title <span style="color:var(--rose)">*</span></label>
@@ -84,7 +84,7 @@
       </div>
 
       <div style="display:flex; gap:12px; margin-top: var(--spacing-xl)">
-        <a href="{% url 'books' %}" class="btn btn-secondary" style="flex:1">Cancel</a>
+        <a href="/books" class="btn btn-secondary" style="flex:1">Cancel</a>
         <button type="submit" class="btn btn-primary" style="flex:2" id="submitBtn">
           ➕ Add to Library
         </button>

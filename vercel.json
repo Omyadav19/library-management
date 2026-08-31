@@ -1,19 +1,14 @@
 {
   "builds": [
     {
-      "src": "libra_project/wsgi.py",
+      "src": "main.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "libra_project/wsgi.py"
+      "dest": "main.py"
     }
-  ],
-  "env": {
-    "DJANGO_SETTINGS_MODULE": "libra_project.settings",
-    "WSGI_APPLICATION": "libra_project.wsgi.application",
-    "DISABLE_COLLECTSTATIC": "1"
-  }
+  ]
 }

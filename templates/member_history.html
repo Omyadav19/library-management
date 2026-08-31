@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+
 
 {% block title %}Member History{% endblock %}
 {% block greeting %}Member History{% endblock %}
@@ -15,8 +15,8 @@
 <div style="max-width:500px; margin-bottom:var(--spacing-2xl)">
   <div class="card">
     <div class="chart-title mb-lg">🔎 Search Member</div>
-    <form method="POST" action="{% url 'member_history' %}">
-      {% csrf_token %}
+    <form method="POST" action="/member_history">
+      
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label" for="memberIdSearch">Member ID</label>
         <div style="display:flex; gap:12px">
@@ -131,8 +131,8 @@
                     <div style="font-size:11px; color:var(--text-muted)">Due</div>
                     <div style="font-size:13px; font-weight:600; color:var(--text-secondary)">{{ rec.due_date }}</div>
                     {% if rec.status == 'issued' %}
-                      <form method="POST" action="{% url 'return_book' %}" style="margin-top:8px">
-                        {% csrf_token %}
+                      <form method="POST" action="/return_book" style="margin-top:8px">
+                        
                         <input type="hidden" name="action" value="search">
                         <input type="hidden" name="issue_id" value="{{ rec.issue_id }}">
                         <button type="submit" class="btn btn-secondary btn-sm">Return →</button>

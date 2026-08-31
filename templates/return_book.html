@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+
 
 {% block title %}Return Book{% endblock %}
 {% block greeting %}Return a Book{% endblock %}
@@ -17,8 +17,8 @@
   <!-- Search Form -->
   <div class="card mb-lg">
     <div class="chart-title mb-lg">🔍 Find Issue Record</div>
-    <form method="POST" action="{% url 'return_book' %}">
-      {% csrf_token %}
+    <form method="POST" action="/return_book">
+      
       <input type="hidden" name="action" value="search">
       <div class="form-group">
         <label class="form-label" for="issueIdInput">Issue ID</label>
@@ -101,8 +101,8 @@
         </div>
       {% endif %}
 
-      <form method="POST" action="{% url 'return_book' %}">
-        {% csrf_token %}
+      <form method="POST" action="/return_book">
+        
         <input type="hidden" name="action" value="confirm">
         <input type="hidden" name="issue_id" value="{{ record.issue_id }}">
         <button type="submit" class="btn {% if days_overdue > 0 %}btn-danger{% else %}btn-success{% endif %} btn-full btn-lg">
@@ -118,7 +118,7 @@
         <div class="empty-icon">📋</div>
         <div class="empty-title">No record loaded</div>
         <div class="empty-subtitle">Enter an Issue ID above to look up the transaction and process the return.</div>
-        <a href="{% url 'issued' %}" class="btn btn-secondary" style="margin-top:24px">📖 View All Issued Books</a>
+        <a href="/issued" class="btn btn-secondary" style="margin-top:24px">📖 View All Issued Books</a>
       </div>
     </div>
   {% endif %}

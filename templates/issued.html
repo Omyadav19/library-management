@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+
 
 {% block title %}Issued Books{% endblock %}
 {% block greeting %}Issued Books{% endblock %}
@@ -17,8 +17,8 @@
       </p>
     </div>
     <div style="display:flex; gap:12px">
-      <a href="{% url 'return_book' %}" class="btn btn-secondary">📥 Return Book</a>
-      <a href="{% url 'issue_book' %}" class="btn btn-primary">📤 Issue Book</a>
+      <a href="/return_book" class="btn btn-secondary">📥 Return Book</a>
+      <a href="/issue_book" class="btn btn-primary">📤 Issue Book</a>
     </div>
   </div>
 </div>
@@ -80,16 +80,16 @@
             </td>
             <td>
               <div class="action-icons">
-                <form method="POST" action="{% url 'return_book' %}" style="display:inline">
-                  {% csrf_token %}
+                <form method="POST" action="/return_book" style="display:inline">
+                  
                   <input type="hidden" name="action" value="search">
                   <input type="hidden" name="issue_id" value="{{ rec.issue_id }}">
                   <button type="submit" class="icon-btn success" data-tip="Return" aria-label="Return {{ rec.book_title }}">📥</button>
                 </form>
 
                 {% if rec.days_remaining >= 0 and not rec.renewed %}
-                  <form method="POST" action="{% url 'renew' rec.issue_id %}" style="display:inline">
-                    {% csrf_token %}
+                  <form method="POST" action="/renew/{{ rec.issue_id }}" style="display:inline">
+                    
                     <button type="submit" class="icon-btn" data-tip="Renew (+7 days)"
                             aria-label="Renew {{ rec.book_title }}"
                             style="color:var(--indigo-light)">↻</button>
@@ -112,8 +112,8 @@
       <div class="empty-title">No books are currently issued</div>
       <div class="empty-subtitle">All books are available in the library. Issue some books to see them here.</div>
       <div style="display:flex; gap:12px; margin-top:24px">
-        <a href="{% url 'issue_book' %}" class="btn btn-primary">📤 Issue a Book</a>
-        <a href="{% url 'books' %}" class="btn btn-secondary">📚 View Library</a>
+        <a href="/issue_book" class="btn btn-primary">📤 Issue a Book</a>
+        <a href="/books" class="btn btn-secondary">📚 View Library</a>
       </div>
     </div>
   </div>

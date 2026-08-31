@@ -32,8 +32,8 @@
   <div class="card">
     <div class="chart-title mb-lg">💰 Fine Policy</div>
     
-    <form method="POST" action="{% url 'settings' %}">
-      {% csrf_token %}
+    <form method="POST" action="/settings">
+      
       <div style="display:flex; flex-direction:column; gap:var(--spacing-md)">
         <div class="transaction-row" style="align-items: center">
           <span class="transaction-label">Fine per day (₹)</span>
@@ -68,10 +68,10 @@
   <div class="card">
     <div class="chart-title mb-lg">🔗 Quick Links</div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-      <a href="{% url 'dashboard' %}" class="btn btn-secondary">🏠 Dashboard</a>
-      <a href="{% url 'books' %}" class="btn btn-secondary">📚 All Books</a>
-      <a href="{% url 'report' %}" class="btn btn-secondary">📊 Reports</a>
-      <a href="{% url 'overdue' %}" class="btn btn-secondary">⚠️ Overdue</a>
+      <a href="/" class="btn btn-secondary">🏠 Dashboard</a>
+      <a href="/books" class="btn btn-secondary">📚 All Books</a>
+      <a href="/report" class="btn btn-secondary">📊 Reports</a>
+      <a href="/overdue" class="btn btn-secondary">⚠️ Overdue</a>
     </div>
   </div>
 

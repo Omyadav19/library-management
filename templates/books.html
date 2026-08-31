@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+
 
 {% block title %}All Books{% endblock %}
 {% block greeting %}Your Library{% endblock %}
@@ -16,12 +16,12 @@
         {% else %}No books in your library yet{% endif %}
       </p>
     </div>
-    <a href="{% url 'add_book' %}" class="btn btn-primary">➕ Add New Book</a>
+    <a href="/add_book" class="btn btn-primary">➕ Add New Book</a>
   </div>
 </div>
 
 <!-- Controls Bar -->
-<form method="GET" action="{% url 'books' %}" id="filterForm">
+<form method="GET" action="/books" id="filterForm">
   <div class="books-controls">
     <div class="search-wrapper" style="flex:1; min-width:220px">
       <span class="search-icon">🔎</span>
@@ -52,7 +52,7 @@
     </select>
 
     {% if search or genre_filter != 'All' or availability %}
-      <a href="{% url 'books' %}" class="btn btn-secondary btn-sm">✕ Clear</a>
+      <a href="/books" class="btn btn-secondary btn-sm">✕ Clear</a>
     {% endif %}
   </div>
 </form>
@@ -95,7 +95,7 @@
             </td>
             <td>
               <div class="action-icons">
-                <a href="{% url 'issue_book' %}?book_id={{ book.id }}"
+                <a href="/issue_book?book_id={{ book.id }}"
                    class="icon-btn success" data-tip="Issue" aria-label="Issue {{ book.title }}">📤</a>
                 <button class="icon-btn danger" data-tip="Delete"
                         aria-label="Delete {{ book.title }}"
@@ -114,12 +114,12 @@
         <div class="empty-icon">🔎</div>
         <div class="empty-title">No results found</div>
         <div class="empty-subtitle">Try adjusting your search or filters.</div>
-        <a href="{% url 'books' %}" class="btn btn-secondary" style="margin-top:24px">Clear Filters</a>
+        <a href="/books" class="btn btn-secondary" style="margin-top:24px">Clear Filters</a>
       {% else %}
         <div class="empty-icon">📚</div>
         <div class="empty-title">Your library is empty</div>
         <div class="empty-subtitle">Start building your collection by adding the first book.</div>
-        <a href="{% url 'add_book' %}" class="btn btn-primary" style="margin-top:24px">➕ Add First Book</a>
+        <a href="/add_book" class="btn btn-primary" style="margin-top:24px">➕ Add First Book</a>
       {% endif %}
     </div>
   </div>
