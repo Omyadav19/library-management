@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+{% block greeting %}{{ greeting }}, Librarian 👋{% endblock %}
+{% block topdate %}Here's your library overview for today.{% endblock %}
+
+{% block content %}
+
+<!-- ── Top Level Metrics ── -->
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--spacing-lg); margin-bottom: var(--spacing-2xl);">
+  
+  <div class="card" style="padding: var(--spacing-xl); display: flex; align-items: center;">
+    <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(99,102,241,0.1); color: var(--indigo); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 16px;">📚</div>
+    <div>
+      <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Books</div>
+      <div style="font-size: 24px; font-weight: 800; color: var(--text-primary); line-height: 1.2;">{{ stats.total_books }}</div>
+    </div>
+  </div>
+
+  <div class="card" style="padding: var(--spacing-xl); display: flex; align-items: center;">
+    <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(16,185,129,0.1); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 16px;">👤</div>
+    <div>
+      <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Active Members</div>
+      <div style="font-size: 24px; font-weight: 800; color: var(--text-primary); line-height: 1.2;">{{ stats.total_members }}</div>
+    </div>
+  </div>
+
+  <div class="card" style="padding: var(--spacing-xl); display: flex; align-items: center;">
+    <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(59,130,246,0.1); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 16px;">📤</div>
+    <div>
+      <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Issues</div>
+      <div style="font-size: 24px; font-weight: 800; color: var(--text-primary); line-height: 1.2;">{{ stats.total_issues_ever }}</div>
+    </div>
+  </div>
+
+  <div class="card" style="padding: var(--spacing-xl); display: flex; align-items: center;">
+    <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239,68,68,0.1); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 16px;">💰</div>
+    <div>
+      <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Fines Collected</div>
+      <div style="font-size: 24px; font-weight: 800; color: var(--text-primary); line-height: 1.2;">₹{{ stats.fines_collected }}</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Goals / Stats with Circular Progress ── -->
+<div class="card" style="margin-bottom: var(--spacing-2xl);">
+  <div class="chart-header" style="margin-bottom: var(--spacing-xl)">
+    <div>
+      <div class="chart-title">Library Goals</div>
+      <div class="chart-subtitle">Key metrics for current month</div>
+    </div>
+    <a href="#" class="btn btn-secondary btn-sm" style="border:none; color:var(--text-muted)">See more</a>
+  </div>
+  
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-xl); text-align: center;">
+    
+    <!-- Chart 1: Availability -->
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div style="font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:16px;">Books Available</div>
+      <div style="position:relative; width:100px; height:100px;">
+        <svg viewBox="0 0 36 36" style="width:100%; height:100%;">
+          <path style="stroke: #E2E8F0; stroke-width: 3; fill: none;"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path style="stroke: var(--indigo); stroke-width: 3; stroke-linecap: round; fill: none; stroke-dasharray: {{ stats.availability_pct }}, 100;"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        </svg>
+        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:22px; color:var(--text-primary);">
+          {{ stats.availability_pct }}%
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 2: Issued -->
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div style="font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:16px;">Currently Checked Out</div>
+      <div style="position:relative; width:100px; height:100px;">
+        <svg viewBox="0 0 36 36" style="width:100%; height:100%;">
+          <path style="stroke: #E2E8F0; stroke-width: 3; fill: none;"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path style="stroke: #06b6d4; stroke-width: 3; stroke-linecap: round; fill: none; stroke-dasharray: {{ stats.issued_pct }}, 100;"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        </svg>
+        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:22px; color:var(--text-primary);">
+          {{ stats.issued_pct }}%
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 3: Overdue Rate -->
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div style="font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:16px;">Overdue Rate</div>
+      <div style="position:relative; width:100px; height:100px;">
+        <svg viewBox="0 0 36 36" style="width:100%; height:100%;">
+          <path style="stroke: #E2E8F0; stroke-width: 3; fill: none;"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path style="stroke: #1B254B; stroke-width: 3; stroke-linecap: round; fill: none; stroke-dasharray: {{ stats.overdue_pct }}, 100;"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        </svg>
+        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:22px; color:var(--text-primary);">
+          {{ stats.overdue_pct }}%
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Row 2: Recently Added + Overdue Books ── -->
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); margin-bottom: var(--spacing-lg)">
+
+  <!-- Recently Added -->
+  <div class="card">
+    <div class="chart-header" style="margin-bottom: var(--spacing-lg)">
+      <div>
+        <div class="chart-title">🆕 Recently Added</div>
+        <div class="chart-subtitle">Latest additions to your collection</div>
+      </div>
+      <a href="{% url 'books' %}" class="btn btn-secondary btn-sm">View all →</a>
+    </div>
+
+    {% if stats.recent_books %}
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px;">
+        {% for book in stats.recent_books|slice:":4" %}
+          <div style="display: flex; flex-direction: column; cursor: pointer; transition: transform var(--transition-fast);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <!-- Graphical Cover -->
+            <div style="aspect-ratio: 2/3; border-radius: var(--radius-md); background: {% cycle 'linear-gradient(135deg, #1e293b, #0f172a)' 'linear-gradient(135deg, #fef3c7, #fbbf24)' 'linear-gradient(135deg, #064e3b, #022c22)' 'linear-gradient(135deg, #7f1d1d, #450a0a)' 'linear-gradient(135deg, #4c1d95, #2e1065)' %}; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px;">
+              
+              <!-- Faux Cover Design -->
+              <div style="font-family: var(--font-display); font-weight: 800; font-size: 14px; line-height: 1.1; color: {% cycle '#f8fafc' '#1e293b' '#f8fafc' '#f8fafc' '#f8fafc' %}; text-transform: uppercase;">
+                {{ book.title|truncatechars:20 }}
+              </div>
+              <div style="position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 8px; color: {% cycle '#94a3b8' '#92400e' '#a7f3d0' '#fca5a5' '#c4b5fd' %}; text-transform: uppercase; font-weight: 600; letter-spacing: 1px;">
+                {{ book.author|truncatechars:15 }}
+              </div>
+              <!-- Decorative lines -->
+              <div style="position: absolute; top: 12px; left: 12px; width: 4px; height: 20px; background: currentColor; opacity: 0.3;"></div>
+
+            </div>
+            
+            <!-- Info below cover -->
+            <div style="font-weight: 700; font-size: 13px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-bottom: 4px;">
+              {{ book.title }}
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              {{ book.author }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding: var(--spacing-xl)">
+        <div class="empty-icon" style="font-size:36px">📚</div>
+        <div class="empty-subtitle">No books yet. <a href="{% url 'add_book' %}" style="color:var(--indigo-light)">Add the first one →</a></div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Overdue Books -->
+  <div class="card">
+    <div class="chart-header" style="margin-bottom: var(--spacing-lg)">
+      <div>
+        <div class="chart-title">⚠️ Overdue Books</div>
+        <div class="chart-subtitle">
+          {% if stats.overdue_len > 0 %}
+            {{ stats.overdue_len }} book{% if stats.overdue_len != 1 %}s{% endif %} need attention
+          {% else %}
+            Nothing overdue today
+          {% endif %}
+        </div>
+      </div>
+      <a href="{% url 'overdue' %}" class="btn btn-secondary btn-sm">View overdue →</a>
+    </div>
+
+    {% if stats.overdue_list %}
+      <div style="display:flex; flex-direction:column; gap:10px">
+        {% for item in stats.overdue_list %}
+          {% if forloop.counter <= 4 %}
+          <div style="background:rgba(244,63,94,0.06); border:1px solid rgba(244,63,94,0.15);
+                      border-radius:var(--radius-lg); padding:14px">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px">
+              <div style="flex:1; min-width:0">
+                <div style="font-weight:600; color:var(--text-primary); font-size:14px;
+                            white-space:nowrap; overflow:hidden; text-overflow:ellipsis">
+                  {{ item.book_title }}
+                </div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:2px">
+                  {{ item.member_name }} · {{ item.member_id }}
+                </div>
+              </div>
+              <div style="flex-shrink:0; text-align:right">
+                <span class="badge badge-overdue" style="display:block; margin-bottom:4px">
+                  {{ item.days_overdue }} day{% if item.days_overdue != 1 %}s{% endif %}
+                </span>
+                <span style="font-size:11px; font-weight:700; color:var(--rose)">
+                  ₹{{ item.estimated_fine }}
+                </span>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        {% endfor %}
+
+        <a href="{% url 'overdue' %}" class="btn btn-danger btn-sm btn-full" style="margin-top:4px">
+          Process Returns →
+        </a>
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding: var(--spacing-xl)">
+        <div style="font-size:48px; margin-bottom:12px">✨</div>
+        <div style="font-weight:700; color:var(--emerald); font-size:15px">Library is on track!</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:6px">No overdue books today.</div>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- ── Row 3: Activity Chart + Popular Books ── -->
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); margin-bottom: var(--spacing-2xl)">
+
+  <!-- Activity Chart -->
+  <div class="card">
+    <div class="chart-header" style="margin-bottom: var(--spacing-md)">
+      <div>
+        <div class="chart-title">Library Activity</div>
+        <div class="chart-subtitle">Books issued vs returned over time</div>
+      </div>
+      <div class="chart-filters" role="group" aria-label="Chart time range">
+        <button class="chart-filter-btn active" onclick="switchChartRange(7, this)">7D</button>
+        <button class="chart-filter-btn" onclick="switchChartRange(30, this)">30D</button>
+        <button class="chart-filter-btn" onclick="switchChartRange(90, this)">3M</button>
+        <button class="chart-filter-btn" onclick="switchChartRange(365, this)">1Y</button>
+      </div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="activityChart" role="img" aria-label="Library activity chart"></canvas>
+    </div>
+    <div class="chart-legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#6366f1"></div>Issued
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#10b981"></div>Returned
+      </div>
+    </div>
+  </div>
+
+  <!-- Favourite Genres -->
+  <div class="card">
+    <div class="chart-header" style="margin-bottom: var(--spacing-lg)">
+      <div>
+        <div class="chart-title">Favourite genres</div>
+        <div class="chart-subtitle">Diagram based on books in your library</div>
+      </div>
+    </div>
+
+    {% if stats.total_books > 0 %}
+      <div style="display: flex; align-items: center; justify-content: space-between; height: 100%; gap: 20px;">
+        <div class="chart-wrapper" style="width: 50%; height: 200px; position: relative;">
+          <canvas id="dashboardGenreChart" data-genres='{{ stats.genre_counts_json|safe }}' role="img" aria-label="Books by genre doughnut chart"></canvas>
+        </div>
+        <div class="chart-legend" id="dashboardGenreLegend" style="width: 50%; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <!-- Legend generated by JS -->
+        </div>
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding: var(--spacing-xl)">
+        <div class="empty-icon" style="font-size:36px">📊</div>
+        <div class="empty-subtitle">Add books to see genre distribution.</div>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Premium Quick Actions -->
+<div style="margin-bottom: var(--spacing-2xl);">
+  <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px;">
+    
+    <!-- Add Book -->
+    <a href="{% url 'add_book' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(139, 92, 246, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(139, 92, 246, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #f3e8ff; color: #7e22ce; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">➕</div>
+      <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Add Book</span>
+    </a>
+
+    <!-- Issue Book -->
+    <a href="{% url 'issue_book' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(59, 130, 246, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(59, 130, 246, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #e0f2fe; color: #0369a1; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">📤</div>
+      <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Issue Book</span>
+    </a>
+
+    <!-- Return Book -->
+    <a href="{% url 'return_book' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(16, 185, 129, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(16, 185, 129, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #ecfdf5; color: #047857; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">📥</div>
+      <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Return Book</span>
+    </a>
+
+    <!-- Search Library -->
+    <a href="{% url 'search' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(245, 158, 11, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(245, 158, 11, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #fef3c7; color: #b45309; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">🔎</div>
+      <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Search</span>
+    </a>
+
+    <!-- Member History -->
+    <a href="{% url 'member_history' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(217, 70, 239, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(217, 70, 239, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #fae8ff; color: #a21caf; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">👤</div>
+      <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Members</span>
+    </a>
+
+    <!-- Reports -->
+    <a href="{% url 'report' %}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 10px; border-radius: var(--radius-lg); background: #ffffff; border: 1px solid rgba(99, 102, 241, 0.15); text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 25px -5px rgba(99, 102, 241, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px;">📊</div>
+      <span style="font-size: 14px; font-weight: 700; color: #1e293b;">Reports</span>
+    </a>
+  </div>
+</div>
+
+<!-- ── Recent Transactions ── -->
+<div class="card" style="margin-bottom: var(--spacing-2xl);">
+  <div class="chart-header" style="margin-bottom: var(--spacing-lg)">
+    <div>
+      <div class="chart-title">Recent Transactions</div>
+      <div class="chart-subtitle">Latest checkouts and returns</div>
+    </div>
+    <a href="{% url 'member_history' %}" class="btn btn-secondary btn-sm" style="border:none; color:var(--text-muted)">View all</a>
+  </div>
+
+  {% if stats.recent_transactions %}
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+            <th style="padding: 12px 16px; font-weight: 600;">Member</th>
+            <th style="padding: 12px 16px; font-weight: 600;">Book Title</th>
+            <th style="padding: 12px 16px; font-weight: 600;">Date</th>
+            <th style="padding: 12px 16px; font-weight: 600; text-align: right;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in stats.recent_transactions %}
+            <tr style="border-bottom: 1px solid rgba(0,0,0,0.02);">
+              <td style="padding: 16px; font-size: 14px; font-weight: 600; color: var(--text-primary);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width:28px; height:28px; border-radius:50%; background:var(--bg-primary); display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:12px;">👤</div>
+                  {{ r.member_name }}
+                </div>
+              </td>
+              <td style="padding: 16px; font-size: 14px; color: var(--text-secondary);">
+                {{ r.book.title|truncatechars:35 }}
+              </td>
+              <td style="padding: 16px; font-size: 13px; color: var(--text-muted);">
+                {% if r.status == 'issued' %}
+                  {{ r.issue_date|date:"M d, Y" }}
+                {% else %}
+                  {{ r.return_date|date:"M d, Y" }}
+                {% endif %}
+              </td>
+              <td style="padding: 16px; text-align: right;">
+                {% if r.status == 'issued' %}
+                  <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:rgba(59,130,246,0.1); color:#3b82f6; font-size:11px; font-weight:600; text-transform:uppercase;">Issued</span>
+                {% else %}
+                  <span style="display:inline-block; padding:4px 8px; border-radius:12px; background:rgba(16,185,129,0.1); color:#10b981; font-size:11px; font-weight:600; text-transform:uppercase;">Returned</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state" style="padding: var(--spacing-xl)">
+      <div class="empty-icon" style="font-size:36px">📭</div>
+      <div class="empty-subtitle">No recent transactions.</div>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.popularity-fill[data-width-raw]').forEach(el => {
+    const val = parseFloat(el.dataset.widthRaw) || 0;
+    const max = parseFloat(el.dataset.maxRaw) || 1;
+    const pct = max > 0 ? Math.round((val / max) * 100) : 0;
+    setTimeout(() => { el.style.width = pct + '%'; }, 300);
+  });
+});
+</script>
+{% endblock %}

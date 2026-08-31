@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Overdue Books{% endblock %}
+{% block greeting %}Overdue Books{% endblock %}
+{% block topdate %}Books that need your attention{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">⚠️ <span style="background:var(--grad-rose); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text">Overdue Books</span></h1>
+  <p class="page-subtitle">Books that need your attention.</p>
+</div>
+
+{% if overdue_list %}
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--spacing-lg); max-width:500px; margin-bottom:var(--spacing-2xl)">
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-rose">⚠️</div>
+      <div class="stat-value" style="color:var(--rose)">{{ overdue_list|length }}</div>
+      <div class="stat-label">Overdue Books</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-amber">💰</div>
+      <div class="stat-value" style="color:var(--amber)">₹{{ total_fine }}</div>
+      <div class="stat-label">Est. Fines</div>
+    </div>
+  </div>
+
+  <div style="display:grid; gap:var(--spacing-lg)">
+    {% for item in overdue_list %}
+      <div class="overdue-card">
+        <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap">
+          <div style="width:56px; height:74px; border-radius:var(--radius-md); background:linear-gradient(135deg,#f43f5e,#ec4899); display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; box-shadow:var(--shadow-md)">📕</div>
+
+          <div style="flex:1; min-width:180px">
+            <div style="font-size:18px; font-weight:800; color:var(--text-primary); margin-bottom:4px">{{ item.book_title }}</div>
+            <div style="font-size:14px; color:var(--text-secondary); margin-bottom:8px">{{ item.book_author }}</div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+              <span style="font-size:13px; color:var(--text-secondary)">👤 <strong style="color:var(--text-primary)">{{ item.member_name }}</strong></span>
+              <span style="color:var(--border)">·</span>
+              <code style="font-size:12px; color:var(--text-muted); font-family:monospace">{{ item.member_id }}</code>
+            </div>
+          </div>
+
+          <div style="text-align:right; flex-shrink:0">
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:2px">Due Date</div>
+            <div style="font-weight:600; color:var(--rose); margin-bottom:12px">{{ item.due_date }}</div>
+            <span class="badge badge-overdue" style="font-size:13px; padding:6px 12px">
+              {{ item.days_overdue }} day{% if item.days_overdue != 1 %}s{% endif %} overdue
+            </span>
+          </div>
+
+          <div style="background:rgba(244,63,94,0.1); border:1px solid rgba(244,63,94,0.25); border-radius:var(--radius-lg); padding:16px 20px; text-align:center; flex-shrink:0; min-width:100px">
+            <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--rose); margin-bottom:4px">Est. Fine</div>
+            <div style="font-family:var(--font-display); font-size:28px; font-weight:900; color:var(--rose)">₹{{ item.estimated_fine }}</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px; flex-shrink:0">
+            <form method="POST" action="{% url 'return_book' %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="search">
+              <input type="hidden" name="issue_id" value="{{ item.issue_id }}">
+              <button type="submit" class="btn btn-danger btn-sm">Process Return →</button>
+            </form>
+            <a href="{% url 'member_history' %}" class="btn btn-secondary btn-sm">View Member</a>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; padding-top:12px; border-top:1px solid rgba(244,63,94,0.15); font-size:12px; color:var(--text-muted)">
+          Issue ID: <code style="font-family:monospace; color:var(--text-secondary)">{{ item.issue_id }}</code>
+          · Issued: {{ item.issue_date }} · Fine rate: ₹5/day
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="card" style="text-align:center">
+    <div class="empty-state">
+      <div style="font-size:72px; margin-bottom:24px">🎉</div>
+      <div class="empty-title">Everything is on schedule</div>
+      <div class="empty-subtitle">There are no overdue books at the moment. Great job keeping the library on track!</div>
+      <div style="display:flex; gap:12px; justify-content:center; margin-top:32px">
+        <a href="{% url 'issued' %}" class="btn btn-secondary">📖 View Issued</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">🏠 Dashboard</a>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

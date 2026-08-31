@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}All Books{% endblock %}
+{% block greeting %}Your Library{% endblock %}
+{% block topdate %}Manage every book in your collection{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px">
+    <div>
+      <h1 class="page-title">📚 <span class="page-title-gradient">All Books</span></h1>
+      <p class="page-subtitle">
+        {% if books %}{{ books|length }} book{% if books|length != 1 %}s{% endif %} found
+        {% else %}No books in your library yet{% endif %}
+      </p>
+    </div>
+    <a href="{% url 'add_book' %}" class="btn btn-primary">➕ Add New Book</a>
+  </div>
+</div>
+
+<!-- Controls Bar -->
+<form method="GET" action="{% url 'books' %}" id="filterForm">
+  <div class="books-controls">
+    <div class="search-wrapper" style="flex:1; min-width:220px">
+      <span class="search-icon">🔎</span>
+      <input type="text" name="search" id="bookSearch" class="form-input search-input"
+             placeholder="Search title, author, ISBN..."
+             value="{{ search }}" aria-label="Search books" autocomplete="off">
+    </div>
+
+    <select name="genre" class="select-sm" onchange="this.form.submit()" aria-label="Filter by genre">
+      <option value="All" {% if genre_filter == 'All' %}selected{% endif %}>All Genres</option>
+      {% for g in genres %}
+        <option value="{{ g }}" {% if genre_filter == g %}selected{% endif %}>{{ g }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="availability" class="select-sm" onchange="this.form.submit()" aria-label="Filter by availability">
+      <option value="" {% if not availability %}selected{% endif %}>All Status</option>
+      <option value="available" {% if availability == 'available' %}selected{% endif %}>Available</option>
+      <option value="unavailable" {% if availability == 'unavailable' %}selected{% endif %}>Unavailable</option>
+    </select>
+
+    <select name="sort" class="select-sm" onchange="this.form.submit()" aria-label="Sort books">
+      <option value="title"    {% if sort_by == 'title' %}selected{% endif %}>Sort: Title</option>
+      <option value="author"   {% if sort_by == 'author' %}selected{% endif %}>Sort: Author</option>
+      <option value="genre"    {% if sort_by == 'genre' %}selected{% endif %}>Sort: Genre</option>
+      <option value="popular"  {% if sort_by == 'popular' %}selected{% endif %}>Sort: Popular</option>
+      <option value="available"{% if sort_by == 'available' %}selected{% endif %}>Sort: Available</option>
+    </select>
+
+    {% if search or genre_filter != 'All' or availability %}
+      <a href="{% url 'books' %}" class="btn btn-secondary btn-sm">✕ Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+{% if books %}
+  <div class="table-container">
+    <table aria-label="Books table">
+      <thead>
+        <tr>
+          <th>Book</th><th>Genre</th><th>ISBN</th><th>Available</th><th>Issued</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for book in books %}
+          <tr>
+            <td>
+              <div class="book-cell">
+                <div class="book-cover-mini" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">📕</div>
+                <div>
+                  <div class="book-title-text">{{ book.title }}</div>
+                  <div class="book-author-text">{{ book.author }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge badge-genre">{{ book.genre }}</span></td>
+            <td><code style="font-size:12px;color:var(--text-secondary);font-family:monospace">{{ book.isbn }}</code></td>
+            <td>
+              <span style="font-weight:600;color:{% if book.available_copies > 0 %}var(--emerald){% else %}var(--rose){% endif %}">
+                {{ book.available_copies }}
+              </span>
+              <span style="color:var(--text-muted);font-size:12px"> / {{ book.total_copies }}</span>
+            </td>
+            <td><span style="color:var(--text-secondary);font-size:13px">{{ book.total_copies }}</span></td>
+            <td>
+              {% if book.available_copies == 0 %}
+                <span class="badge badge-unavailable"><span class="status-dot status-dot-red"></span>Unavailable</span>
+              {% else %}
+                <span class="badge badge-available"><span class="status-dot status-dot-green"></span>Available</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="action-icons">
+                <a href="{% url 'issue_book' %}?book_id={{ book.id }}"
+                   class="icon-btn success" data-tip="Issue" aria-label="Issue {{ book.title }}">📤</a>
+                <button class="icon-btn danger" data-tip="Delete"
+                        aria-label="Delete {{ book.title }}"
+                        onclick="openDeleteModal('{{ book.id }}','{{ book.title }}',{{ book.available_copies }},{{ book.total_copies }})">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="card">
+    <div class="empty-state">
+      {% if search or genre_filter != 'All' or availability %}
+        <div class="empty-icon">🔎</div>
+        <div class="empty-title">No results found</div>
+        <div class="empty-subtitle">Try adjusting your search or filters.</div>
+        <a href="{% url 'books' %}" class="btn btn-secondary" style="margin-top:24px">Clear Filters</a>
+      {% else %}
+        <div class="empty-icon">📚</div>
+        <div class="empty-title">Your library is empty</div>
+        <div class="empty-subtitle">Start building your collection by adding the first book.</div>
+        <a href="{% url 'add_book' %}" class="btn btn-primary" style="margin-top:24px">➕ Add First Book</a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const bookSearch = document.getElementById('bookSearch');
+let searchTimer;
+bookSearch?.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => document.getElementById('filterForm').submit(), 500);
+});
+</script>
+{% endblock %}

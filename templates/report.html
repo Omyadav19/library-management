@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+{% block greeting %}Library Analytics{% endblock %}
+{% block topdate %}Comprehensive insights and statistics{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px">
+    <div>
+      <h1 class="page-title">📊 <span class="page-title-gradient">Library Analytics</span></h1>
+      <p class="page-subtitle">A complete overview of your library's performance.</p>
+    </div>
+    <div style="display:flex; gap:12px">
+      <button onclick="exportReport()" class="btn btn-secondary">
+        📄 Export Report
+      </button>
+      <button onclick="printReport()" class="btn btn-primary">
+        🖨️ Print Report
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="reportContent">
+
+<!-- ── Summary Stats ── -->
+<div class="stats-grid" style="grid-template-columns: repeat(5, 1fr)">
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-indigo">📚</div>
+    <div class="stat-value">{{ data.total_books }}</div>
+    <div class="stat-label">Total Books</div>
+    <span class="stat-trend stat-trend-neutral">All copies</span>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-blue">📖</div>
+    <div class="stat-value">{{ data.total_titles }}</div>
+    <div class="stat-label">Unique Titles</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-violet">📤</div>
+    <div class="stat-value">{{ data.issued_count }}</div>
+    <div class="stat-label">Currently Issued</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-rose">⚠️</div>
+    <div class="stat-value" style="color:{% if data.overdue_count > 0 %}var(--rose){% else %}var(--text-primary){% endif %}">
+      {{ data.overdue_count }}
+    </div>
+    <div class="stat-label">Overdue</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-amber">💰</div>
+    <div class="stat-value">₹{{ data.fines_collected }}</div>
+    <div class="stat-label">Fines Collected</div>
+  </div>
+</div>
+
+<!-- ── Top 3 Popular Books ── -->
+<div style="margin-bottom: var(--spacing-2xl)">
+  <div class="card">
+    <div class="chart-header" style="margin-bottom: var(--spacing-xl)">
+      <div class="chart-title">🏆 Top Most Issued Books</div>
+    </div>
+
+    {% if data.popular_books and data.max_issue_count > 0 %}
+      <div style="display:flex; flex-direction:column; gap:var(--spacing-md)">
+        {% for book in data.popular_books %}
+          <div class="report-rank-card">
+            <div class="rank-medal">{% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}</div>
+            <div style="width:48px; height:64px; border-radius:var(--radius-sm); flex-shrink:0;
+                        background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                        display:flex; align-items:center; justify-content:center; font-size:22px;
+                        box-shadow:var(--shadow-md)">📕</div>
+            <div style="flex:1; min-width:0">
+              <div style="font-weight:700; color:var(--text-primary)">{{ book.title }}</div>
+              <div style="font-size:13px; color:var(--text-muted)">{{ book.author }}</div>
+              <div style="margin-top:8px">
+                <div style="height:6px; background:var(--bg-glass); border-radius:var(--radius-full); overflow:hidden">
+                  <div class="popularity-fill"
+                       data-width-raw="{{ book.issue_count }}"
+                       data-max-raw="{{ data.max_issue_count }}"
+                       style="width:0%; height:100%; border-radius:var(--radius-full);"></div>
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right; flex-shrink:0">
+              <div style="font-family:var(--font-display); font-size:28px; font-weight:900; color:var(--text-primary)">
+                {{ book.issue_count }}
+              </div>
+              <div style="font-size:12px; color:var(--text-muted)">issue{% if book.issue_count != 1 %}s{% endif %}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding: var(--spacing-xl)">
+        <div class="empty-icon" style="font-size:40px">📊</div>
+        <div class="empty-subtitle">No issue data yet. Start issuing books to see rankings.</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Genre Chart + Financial Summary ── -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--spacing-lg); margin-bottom:var(--spacing-2xl)">
+
+  <!-- Genre Bar Chart -->
+  <div class="card">
+    <div class="chart-header" style="margin-bottom: var(--spacing-lg)">
+      <div class="chart-title">Books by Genre</div>
+    </div>
+    {% if data.genre_counts %}
+      <div class="chart-wrapper" style="height:280px">
+        <canvas id="reportGenreChart"
+                data-genres='{{ data.genre_counts |safe }}'
+                role="img"
+                aria-label="Books by genre bar chart"></canvas>
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding: var(--spacing-xl)">
+        <div class="empty-subtitle">No books in the library yet.</div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Financial Summary -->
+  <div class="card">
+    <div class="chart-header" style="margin-bottom: var(--spacing-lg)">
+      <div class="chart-title">💰 Financial Summary</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:var(--spacing-md)">
+
+      <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); border-radius:var(--radius-xl); padding:var(--spacing-xl); text-align:center">
+        <div style="font-size:13px; font-weight:600; color:var(--emerald); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">
+          Total Fines Collected
+        </div>
+        <div style="font-family:var(--font-display); font-size:48px; font-weight:900; color:var(--emerald)">
+          ₹{{ data.fines_collected }}
+        </div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px">
+          From {{ data.issued_count }} total issued transactions
+        </div>
+      </div>
+
+      {% if data.overdue_count > 0 %}
+        <div style="background:rgba(244,63,94,0.08); border:1px solid rgba(244,63,94,0.2); border-radius:var(--radius-xl); padding:var(--spacing-xl); text-align:center">
+          <div style="font-size:13px; font-weight:600; color:var(--rose); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">
+            Estimated Outstanding Fines
+          </div>
+          <div style="font-family:var(--font-display); font-size:36px; font-weight:900; color:var(--rose)">
+            ₹{{ data.estimated_fines }}
+          </div>
+          <div style="font-size:13px; color:var(--text-muted); margin-top:4px">
+            From {{ data.overdue_count }} overdue book{% if data.overdue_count != 1 %}s{% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.15); border-radius:var(--radius-xl); padding:var(--spacing-xl); text-align:center">
+          <div style="font-size:24px; margin-bottom:8px">🎉</div>
+          <div style="font-weight:700; color:var(--emerald)">No outstanding fines</div>
+          <div style="font-size:13px; color:var(--text-muted)">All books are returned on time!</div>
+        </div>
+      {% endif %}
+
+      <!-- Fine rate -->
+      <div style="background:var(--bg-glass); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px">Fine Policy</div>
+        <div style="font-size:14px; color:var(--text-secondary)">
+          ₹5 per day after the due date.<br>
+          Default loan period: 14 days.<br>
+          Renewal: +7 days (once only).
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Genre Breakdown Table ── -->
+{% if data.genre_counts %}
+  <div class="card mb-2xl">
+    <div class="chart-title mb-lg">Genre Breakdown</div>
+    <div class="table-container" style="border:none; background:transparent">
+      <table>
+        <thead>
+          <tr>
+            <th>Genre</th>
+            <th>Books</th>
+            <th>Distribution</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in data.genre_distribution %}
+            <tr>
+              <td><span class="badge badge-genre">{{ item.genre }}</span></td>
+              <td style="font-weight:600">{{ item.count }}</td>
+              <td style="width:40%">
+                <div style="display:flex; align-items:center; gap:12px">
+                  <div style="flex:1; height:8px; background:var(--bg-glass); border-radius:var(--radius-full); overflow:hidden">
+                    <div class="popularity-fill"
+                         style="height:100%; width:0%; border-radius:var(--radius-full)"
+                         data-width="{{ item.pct }}%">
+                    </div>
+                  </div>
+                  <span style="font-size:12px; color:var(--text-muted); flex-shrink:0; width:36px">
+                    {{ item.pct_int }}%
+                  </span>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+</div><!-- #reportContent -->
+
+{% endblock %}

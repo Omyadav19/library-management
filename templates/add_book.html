@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Add Book{% endblock %}
+{% block greeting %}Add a New Book{% endblock %}
+{% block topdate %}Fill in the details to add a book to your library{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">➕ <span class="page-title-gradient">Add New Book</span></h1>
+  <p class="page-subtitle">Fill in the details. The preview updates in real time.</p>
+</div>
+
+<div class="form-two-col" style="align-items:start">
+
+  <!-- ── LEFT: Form ── -->
+  <div class="card">
+    <form method="POST" action="{% url 'add_book' %}" id="addBookForm" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label" for="title">Book Title <span style="color:var(--rose)">*</span></label>
+        <input type="text"
+               id="title"
+               name="title"
+               class="form-input"
+               placeholder="e.g. Sapiens"
+               required
+               autocomplete="off"
+               aria-required="true">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="author">Author <span style="color:var(--rose)">*</span></label>
+        <input type="text"
+               id="author"
+               name="author"
+               class="form-input"
+               placeholder="e.g. Yuval Noah Harari"
+               required
+               autocomplete="off"
+               aria-required="true">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="genre">Genre <span style="color:var(--rose)">*</span></label>
+        <select id="genre" name="genre" class="form-select" required aria-required="true">
+          <option value="">Select a genre...</option>
+          {% for g in genres %}
+            <option value="{{ g }}">{{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group isbn-field">
+        <label class="form-label" for="isbn">ISBN-13 <span style="color:var(--rose)">*</span></label>
+        <input type="text"
+               id="isbn"
+               name="isbn"
+               class="form-input"
+               placeholder="e.g. 9780143127796"
+               required
+               maxlength="17"
+               autocomplete="off"
+               aria-required="true"
+               aria-describedby="isbnStatus">
+        <div id="isbnStatus" role="status" aria-live="polite"></div>
+        <div class="form-hint">Enter exactly 13 digits. Hyphens are allowed.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="total_copies">Total Copies <span style="color:var(--rose)">*</span></label>
+        <input type="number"
+               id="total_copies"
+               name="total_copies"
+               class="form-input"
+               placeholder="e.g. 3"
+               min="1"
+               max="999"
+               value="1"
+               required
+               aria-required="true">
+        <div class="form-hint">Number of physical copies in your collection.</div>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top: var(--spacing-xl)">
+        <a href="{% url 'books' %}" class="btn btn-secondary" style="flex:1">Cancel</a>
+        <button type="submit" class="btn btn-primary" style="flex:2" id="submitBtn">
+          ➕ Add to Library
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── RIGHT: Live Preview ── -->
+  <div class="book-preview" style="background: linear-gradient(145deg, #f3f4f9, #e9ebf2); padding: 40px; border-radius: 24px; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 10px 40px rgba(0,0,0,0.03);">
+    <div style="font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#8fa1b8; margin-bottom:32px; text-align:center">
+      Live Preview
+    </div>
+
+    <!-- Modern Book Cover -->
+    <div id="previewCover" style="width: 140px; height: 190px; border-radius: 16px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-left: 12px solid rgba(0,0,0,0.15); box-shadow: 0 15px 35px rgba(99, 102, 241, 0.3); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-bottom: 32px; transition: all 0.3s ease;">
+      <!-- Abstract logo matching screenshot -->
+      <div style="position: relative; width: 40px; height: 40px;">
+        <div style="position: absolute; top: 0; left: 0; width: 24px; height: 24px; background: linear-gradient(135deg, #84cc16, #22c55e); border-radius: 2px; z-index: 3;"></div>
+        <div style="position: absolute; top: 6px; left: 8px; width: 24px; height: 24px; background: linear-gradient(135deg, #ef4444, #ec4899); border-radius: 2px; z-index: 2;"></div>
+        <div style="position: absolute; top: 12px; left: 16px; width: 24px; height: 24px; background: linear-gradient(135deg, #3b82f6, #06b6d4); border-radius: 2px; z-index: 1;"></div>
+      </div>
+    </div>
+
+    <!-- Book Info -->
+    <div id="previewTitle" style="font-size: 24px; font-weight: 800; color: #1e293b; margin-bottom: 8px; text-align: center; line-height: 1.2;">Book Title</div>
+    <div id="previewAuthor" style="font-size: 16px; font-weight: 600; color: #94a3b8; margin-bottom: 32px; text-align: center;">Author Name</div>
+
+    <!-- Tag Pills -->
+    <div style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+      <div style="background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.6); padding: 12px 24px; border-radius: 9999px; text-align: center; font-size: 14px; font-weight: 600; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        🏷️ <span id="previewGenre">—</span>
+      </div>
+      <div style="background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.6); padding: 12px 24px; border-radius: 9999px; text-align: center; font-size: 14px; font-weight: 600; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        📋 <span id="previewISBN">ISBN: —</span>
+      </div>
+      <div style="background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.6); padding: 12px 24px; border-radius: 9999px; text-align: center; font-size: 14px; font-weight: 600; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        📦 <span id="previewCopies">1 copy</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Front-end form validation before submit
+document.getElementById('addBookForm')?.addEventListener('submit', (e) => {
+  const title  = document.getElementById('title').value.trim();
+  const author = document.getElementById('author').value.trim();
+  const genre  = document.getElementById('genre').value;
+  const isbn   = document.getElementById('isbn').value.replace(/[-\s]/g, '');
+  const copies = parseInt(document.getElementById('total_copies').value, 10);
+
+  if (!title)  { e.preventDefault(); showToast('error', 'Title is required'); return; }
+  if (!author) { e.preventDefault(); showToast('error', 'Author is required'); return; }
+  if (!genre)  { e.preventDefault(); showToast('error', 'Please select a genre'); return; }
+  if (!isbn || !isbn.match(/^\d{13}$/)) {
+    e.preventDefault();
+    showToast('error', 'Invalid ISBN', 'ISBN must be exactly 13 digits');
+    return;
+  }
+  if (!copies || copies < 1) {
+    e.preventDefault();
+    showToast('error', 'Invalid copies count', 'Must be at least 1');
+    return;
+  }
+});
+</script>
+{% endblock %}

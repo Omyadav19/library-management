@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+{% block greeting %}Settings{% endblock %}
+{% block topdate %}Configure your library preferences{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">⚙️ <span class="page-title-gradient">Settings</span></h1>
+  <p class="page-subtitle">Library configuration and preferences.</p>
+</div>
+
+<div style="max-width:640px; display:flex; flex-direction:column; gap:var(--spacing-lg)">
+
+  <!-- Library Info -->
+  <div class="card">
+    <div class="chart-title mb-lg">📚 Library Information</div>
+    <div style="display:flex; flex-direction:column; gap:var(--spacing-md)">
+      <div class="transaction-row">
+        <span class="transaction-label">Library Name</span>
+        <span class="transaction-value">LIBRA</span>
+      </div>
+      <div class="transaction-row">
+        <span class="transaction-label">Librarian</span>
+        <span class="transaction-value">Administrator</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fine Policy -->
+  <div class="card">
+    <div class="chart-title mb-lg">💰 Fine Policy</div>
+    
+    <form method="POST" action="{% url 'settings' %}">
+      {% csrf_token %}
+      <div style="display:flex; flex-direction:column; gap:var(--spacing-md)">
+        <div class="transaction-row" style="align-items: center">
+          <span class="transaction-label">Fine per day (₹)</span>
+          <div style="display:flex; gap:8px">
+            <input type="number" name="fine_per_day" value="{{ config.fine_per_day }}" class="form-input" style="width: 100px; padding: 6px 12px;" min="0">
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+          </div>
+        </div>
+        <div class="transaction-row">
+          <span class="transaction-label">Default loan period</span>
+          <span class="transaction-value">14 days</span>
+        </div>
+        <div class="transaction-row">
+          <span class="transaction-label">Renewal extension</span>
+          <span class="transaction-value">+7 days</span>
+        </div>
+        <div class="transaction-row" style="border-bottom:none">
+          <span class="transaction-label">Max renewals per loan</span>
+          <span class="transaction-value">1</span>
+        </div>
+      </div>
+    </form>
+    
+    <div style="margin-top:16px; padding:12px; background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.15); border-radius:var(--radius-lg)">
+      <div style="font-size:12px; color:var(--text-muted)">
+        ℹ️ The fine amount is applied to overdue books on a daily basis. Updates take effect immediately.
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="card">
+    <div class="chart-title mb-lg">🔗 Quick Links</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary">🏠 Dashboard</a>
+      <a href="{% url 'books' %}" class="btn btn-secondary">📚 All Books</a>
+      <a href="{% url 'report' %}" class="btn btn-secondary">📊 Reports</a>
+      <a href="{% url 'overdue' %}" class="btn btn-secondary">⚠️ Overdue</a>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

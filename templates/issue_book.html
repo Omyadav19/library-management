@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Issue Book{% endblock %}
+{% block greeting %}Issue a Book{% endblock %}
+{% block topdate %}Step-by-step book lending workflow{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">📤 <span class="page-title-gradient">Issue Book</span></h1>
+  <p class="page-subtitle">Follow the steps to lend a book to a member.</p>
+</div>
+
+{% if not books %}
+  <div class="card">
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">No books available</div>
+      <div class="empty-subtitle">All books are currently issued, or your library is empty.</div>
+      <div style="display:flex; gap:12px; margin-top:24px">
+        <a href="{% url 'add_book' %}" class="btn btn-primary">➕ Add Books</a>
+        <a href="{% url 'return_book' %}" class="btn btn-secondary">📥 Return Book</a>
+      </div>
+    </div>
+  </div>
+{% else %}
+
+<!-- Step Indicator -->
+<div class="wizard-steps" role="list">
+  <div class="wizard-step active" role="listitem">
+    <div class="wizard-step-num">1</div>
+    <div class="wizard-step-label">Select Book</div>
+  </div>
+  <div class="wizard-connector"></div>
+  <div class="wizard-step" role="listitem">
+    <div class="wizard-step-num">2</div>
+    <div class="wizard-step-label">Member Details</div>
+  </div>
+  <div class="wizard-connector"></div>
+  <div class="wizard-step" role="listitem">
+    <div class="wizard-step-num">3</div>
+    <div class="wizard-step-label">Confirm Issue</div>
+  </div>
+</div>
+
+<form method="POST" action="{% url 'issue_book' %}" id="issueForm">
+  {% csrf_token %}
+  <input type="hidden" name="book_id"     id="bookIdHidden"     value="">
+  <input type="hidden" name="member_name" id="memberNameHidden" value="">
+  <input type="hidden" name="member_id"   id="memberIdHidden"   value="">
+  <input type="hidden" name="due_date"    id="dueDateHidden"    value="">
+
+  <!-- ── STEP 1: Select Book ── -->
+  <div class="step-panel active" id="step1Panel">
+    <div style="max-width: 600px; margin: 0 auto;">
+      <div class="card">
+        <div class="chart-title mb-lg">Select a Book to Issue</div>
+        <div class="form-group">
+          <label class="form-label" for="bookSelect">Available Books</label>
+          <select id="bookSelect" class="form-select" aria-label="Select book">
+            <option value="">Choose a book...</option>
+            {% for book in books %}
+              <option value="{{ book.id }}"
+                {% if selected_book and selected_book.id == book.id %}selected{% endif %}>
+                {{ book.title }} — {{ book.author }}
+                ({{ book.available_copies }} available)
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Selected Book Card -->
+        <div id="selectedBookCard" style="display:{% if selected_book %}block{% else %}none{% endif %}">
+          <div style="background:var(--bg-glass); border:1px solid var(--border-accent); border-radius:var(--radius-xl); padding:var(--spacing-xl); margin-top:var(--spacing-lg)">
+            <div style="display:flex; gap:20px; align-items:center">
+              <div style="width:60px; height:80px; border-radius:var(--radius-md); background:linear-gradient(135deg,#6366f1,#8b5cf6); display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; box-shadow:var(--shadow-md)">
+                📕
+              </div>
+              <div>
+                <div style="font-size:20px; font-weight:800; color:var(--text-primary); margin-bottom:4px" id="sbTitle">
+                  {% if selected_book %}{{ selected_book.title }}{% endif %}
+                </div>
+                <div style="font-size:14px; color:var(--text-secondary); margin-bottom:12px" id="sbAuthor">
+                  {% if selected_book %}{{ selected_book.author }}{% endif %}
+                </div>
+                <div style="display:flex; gap:12px; flex-wrap:wrap">
+                  <span class="badge badge-genre" id="sbGenre">
+                    {% if selected_book %}{{ selected_book.genre }}{% endif %}
+                  </span>
+                  <span class="badge" style="background:rgba(16,185,129,0.12); color:var(--emerald); border:1px solid rgba(16,185,129,0.2)">
+                    📦 <span id="sbAvail">{% if selected_book %}{{ selected_book.available_copies }} of {{ selected_book.total_copies }} available{% endif %}</span>
+                  </span>
+                </div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:8px; font-family:monospace" id="sbISBN">
+                  {% if selected_book %}ISBN: {{ selected_book.isbn }}{% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button"
+                id="toStep2Btn"
+                class="btn btn-primary btn-full"
+                style="margin-top:24px"
+                {% if not selected_book %}disabled{% endif %}>
+          Continue to Member Details →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: Member Details ── -->
+  <div class="step-panel" id="step2Panel">
+    <div style="max-width: 600px; margin: 0 auto;">
+      <div class="card">
+        <div class="chart-title mb-lg">Member Information</div>
+
+        <div class="form-group">
+          <label class="form-label" for="memberName">Member Name <span style="color:var(--rose)">*</span></label>
+          <input type="text"
+                 id="memberName"
+                 class="form-input"
+                 placeholder="e.g. Rahul Sharma"
+                 autocomplete="off"
+                 aria-required="true">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="memberId">Member ID <span style="color:var(--rose)">*</span></label>
+          <input type="text"
+                 id="memberId"
+                 class="form-input"
+                 placeholder="e.g. MEM001"
+                 autocomplete="off"
+                 aria-required="true">
+          <div class="form-hint">Member IDs are stored in uppercase.</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+          <div class="form-group">
+            <label class="form-label">Issue Date</label>
+            <div class="form-input" style="background:var(--bg-glass); cursor:default; color:var(--text-secondary)">
+              {{ today }}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dueDate">Due Date</label>
+            <input type="date"
+                   id="dueDate"
+                   class="form-input"
+                   value="{{ default_due }}"
+                   min="{{ today }}"
+                   aria-label="Due date (default 14 days)">
+            <div class="form-hint">Default: 14 days from today.</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:8px">
+          <button type="button" id="backToStep1" class="btn btn-secondary" style="flex:1">← Back</button>
+          <button type="button" id="toStep3Btn" class="btn btn-primary" style="flex:2">
+            Review & Confirm →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: Confirm ── -->
+  <div class="step-panel" id="step3Panel">
+    <div style="max-width: 600px; margin: 0 auto;">
+      <div class="card">
+        <div class="chart-title mb-lg">Confirm Issue</div>
+
+        <div style="background:var(--bg-glass); border:1px solid var(--border-accent); border-radius:var(--radius-xl); padding:var(--spacing-xl); margin-bottom:var(--spacing-xl)">
+          <div style="font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:16px">
+            Issue Summary
+          </div>
+          <div class="transaction-row">
+            <span class="transaction-label">Book</span>
+            <span class="transaction-value" id="confBook" style="max-width:60%; text-align:right">—</span>
+          </div>
+          <div class="transaction-row">
+            <span class="transaction-label">Member</span>
+            <span class="transaction-value" id="confMember">—</span>
+          </div>
+          <div class="transaction-row">
+            <span class="transaction-label">Member ID</span>
+            <span class="transaction-value" id="confMemberId">—</span>
+          </div>
+          <div class="transaction-row">
+            <span class="transaction-label">Issue Date</span>
+            <span class="transaction-value">{{ today }}</span>
+          </div>
+          <div class="transaction-row">
+            <span class="transaction-label">Due Date</span>
+            <span class="transaction-value" id="confDue">
+              <span id="defaultDue">{{ default_due }}</span>
+            </span>
+          </div>
+          <div class="transaction-row" style="border-bottom:none">
+            <span class="transaction-label">Fine if overdue</span>
+            <span class="transaction-value" style="color:var(--text-muted)">₹5 per day</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px">
+          <button type="button" id="backToStep2" class="btn btn-secondary" style="flex:1">← Back</button>
+          <button type="submit" class="btn btn-primary" style="flex:2" id="finalIssueBtn">
+            📤 Issue Book →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</form>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Wire up hidden fields before submit
+document.getElementById('issueForm')?.addEventListener('submit', () => {
+  document.getElementById('bookIdHidden').value     = document.getElementById('bookSelect')?.value || '';
+  document.getElementById('memberNameHidden').value = document.getElementById('memberName')?.value || '';
+  document.getElementById('memberIdHidden').value   = document.getElementById('memberId')?.value || '';
+  document.getElementById('dueDateHidden').value    = document.getElementById('dueDate')?.value || '';
+});
+
+// Pre-select book if URL param present
+window.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('bookSelect');
+  {% if selected_book %}
+    if (sel) {
+      sel.value = '{{ selected_book.id }}';
+      sel.dispatchEvent(new Event('change'));
+    }
+  {% endif %}
+});
+</script>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Member History{% endblock %}
+{% block greeting %}Member History{% endblock %}
+{% block topdate %}Look up a member's complete borrowing record{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">👤 <span class="page-title-gradient">Member History</span></h1>
+  <p class="page-subtitle">Look up any member by their ID to see their full borrowing timeline.</p>
+</div>
+
+<div style="max-width:500px; margin-bottom:var(--spacing-2xl)">
+  <div class="card">
+    <div class="chart-title mb-lg">🔎 Search Member</div>
+    <form method="POST" action="{% url 'member_history' %}">
+      {% csrf_token %}
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label" for="memberIdSearch">Member ID</label>
+        <div style="display:flex; gap:12px">
+          <div class="search-wrapper" style="flex:1">
+            <span class="search-icon">👤</span>
+            <input type="text" id="memberIdSearch" name="member_id" class="form-input search-input"
+                   placeholder="e.g. MEM001" autocomplete="off" value="{{ member_id }}" aria-label="Member ID" autofocus>
+          </div>
+          <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if profile %}
+  <div style="display:grid; grid-template-columns:300px 1fr; gap:var(--spacing-2xl); align-items:start">
+
+    <!-- Profile Card -->
+    <div>
+      <div class="member-profile">
+        <div class="member-avatar-big">👤</div>
+        <div class="member-name">{{ profile.member_name }}</div>
+        <div class="member-id-badge">🪪 {{ profile.member_id }}</div>
+
+        <div class="member-stats-grid">
+          <div class="member-stat">
+            <div class="member-stat-val">{{ profile.total_borrowed }}</div>
+            <div class="member-stat-label">📚 Borrowed</div>
+          </div>
+          <div class="member-stat">
+            <div class="member-stat-val">{{ profile.total_returned }}</div>
+            <div class="member-stat-label">✓ Returned</div>
+          </div>
+          <div class="member-stat">
+            <div class="member-stat-val" style="color:{% if profile.currently_issued > 0 %}var(--blue){% else %}var(--text-primary){% endif %}">
+              {{ profile.currently_issued }}
+            </div>
+            <div class="member-stat-label">📤 Current</div>
+          </div>
+          <div class="member-stat">
+            <div class="member-stat-val" style="color:{% if profile.total_fines > 0 %}var(--rose){% else %}var(--emerald){% endif %}">
+              ₹{{ profile.total_fines }}
+            </div>
+            <div class="member-stat-label">💰 Fines</div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px; padding:14px; background:var(--bg-glass); border:1px solid var(--border); border-radius:var(--radius-lg)">
+          {% if profile.currently_issued > 0 %}
+            <div style="font-size:13px; color:var(--blue)">
+              📖 {{ profile.currently_issued }} book{% if profile.currently_issued != 1 %}s{% endif %} currently borrowed
+            </div>
+          {% else %}
+            <div style="font-size:13px; color:var(--emerald)">✓ None currently checked out</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div>
+      <div style="font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:var(--spacing-xl)">
+        Borrowing Timeline
+        <span style="font-size:13px; font-weight:400; color:var(--text-muted); font-family:var(--font-body); margin-left:8px">
+          {{ records|length }} record{% if records|length != 1 %}s{% endif %}
+        </span>
+      </div>
+
+      {% if records %}
+        <div class="timeline">
+          {% for rec in records %}
+            <div class="timeline-item">
+              <div class="timeline-dot {% if rec.status == 'returned' %}timeline-dot-returned{% else %}timeline-dot-issued{% endif %}">
+                {% if rec.status == 'returned' %}✓{% else %}📖{% endif %}
+              </div>
+              <div class="timeline-content">
+                <div style="display:flex; align-items:start; justify-content:space-between; gap:12px; flex-wrap:wrap">
+                  <div>
+                    <div class="timeline-book-title">{{ rec.book_title }}</div>
+                    <div class="timeline-dates">
+                      {{ rec.issue_date }}
+                      {% if rec.return_date %} → {{ rec.return_date }}{% else %} → <em>ongoing</em>{% endif %}
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px">
+                      {% if rec.status == 'returned' %}
+                        <span class="badge badge-returned">✓ Returned</span>
+                        {% if rec.fine > 0 %}
+                          <span class="badge badge-overdue">Fine: ₹{{ rec.fine }}</span>
+                        {% else %}
+                          <span class="badge badge-available">No fine</span>
+                        {% endif %}
+                      {% else %}
+                        {% if rec.days_remaining < 0 %}
+                          <span class="badge badge-overdue">Overdue</span>
+                          {% if rec.estimated_fine > 0 %}
+                            <span class="badge" style="background:rgba(244,63,94,0.1); color:var(--rose); border:1px solid rgba(244,63,94,0.2)">Est. fine: ₹{{ rec.estimated_fine }}</span>
+                          {% endif %}
+                        {% else %}
+                          <span class="badge badge-issued">Currently Issued</span>
+                          {% if rec.days_remaining >= 0 %}
+                            <span class="badge badge-available">{{ rec.days_remaining }} day{% if rec.days_remaining != 1 %}s{% endif %} left</span>
+                          {% endif %}
+                        {% endif %}
+                      {% endif %}
+                      {% if rec.renewed %}
+                        <span class="badge" style="background:rgba(99,102,241,0.1); color:var(--indigo-light); border:1px solid rgba(99,102,241,0.2)">↻ Renewed</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div style="text-align:right; flex-shrink:0">
+                    <div style="font-size:11px; color:var(--text-muted)">Due</div>
+                    <div style="font-size:13px; font-weight:600; color:var(--text-secondary)">{{ rec.due_date }}</div>
+                    {% if rec.status == 'issued' %}
+                      <form method="POST" action="{% url 'return_book' %}" style="margin-top:8px">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="search">
+                        <input type="hidden" name="issue_id" value="{{ rec.issue_id }}">
+                        <button type="submit" class="btn btn-secondary btn-sm">Return →</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </div>
+                <div style="margin-top:10px; font-size:11px; color:var(--text-muted)">
+                  Issue ID: <code style="font-family:monospace">{{ rec.issue_id }}</code>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">No records</div>
+          <div class="empty-subtitle">No borrowing history found for this member.</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+{% elif member_id %}
+  <div class="card" style="max-width:500px">
+    <div class="empty-state">
+      <div class="empty-icon">👤</div>
+      <div class="empty-title">Member not found</div>
+      <div class="empty-subtitle">No records found for Member ID <strong>{{ member_id }}</strong>. Check the ID and try again.</div>
+    </div>
+  </div>
+
+{% else %}
+  <div class="card" style="max-width:560px; border-style:dashed">
+    <div class="empty-state">
+      <div class="empty-icon">👤</div>
+      <div class="empty-title">Enter a Member ID</div>
+      <div class="empty-subtitle">Type a member's ID above (e.g. MEM001) to view their complete borrowing history, currently checked out books, and fine records.</div>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

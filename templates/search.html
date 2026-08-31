@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Search Books{% endblock %}
+{% block greeting %}Search Library{% endblock %}
+{% block topdate %}Find any book by title, author, genre, or ISBN{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">🔎 <span class="page-title-gradient">Search Library</span></h1>
+  <p class="page-subtitle">Instant search across your entire collection.</p>
+</div>
+
+<form method="GET" action="{% url 'search' %}" id="searchForm">
+  <div class="search-wrapper" style="margin-bottom: var(--spacing-xl)">
+    <span class="search-icon" style="font-size:20px; left:18px">🔎</span>
+    <input type="text" id="searchInput" name="q" class="form-input search-big"
+           placeholder="Search books, authors, genres or ISBN..."
+           value="{{ query }}" aria-label="Search books" autocomplete="off" autofocus>
+  </div>
+
+  <div class="filter-chips" role="group" aria-label="Genre filters">
+    <a href="{% url 'search' %}?q={{ query }}&genre=All"
+       class="filter-chip {% if genre_filter == 'All' %}active{% endif %}">All</a>
+    {% for g in all_genres_list %}
+      <a href="{% url 'search' %}?q={{ query }}&genre={{ g }}"
+         class="filter-chip {% if genre_filter == g %}active{% endif %}">{{ g }}</a>
+    {% endfor %}
+  </div>
+</form>
+
+<div style="margin-bottom:var(--spacing-lg); font-size:14px; color:var(--text-secondary)">
+  {% if results %}
+    Found <strong style="color:var(--text-primary)">{{ results|length }}</strong>
+    result{% if results|length != 1 %}s{% endif %}
+    {% if query %}for "<strong style="color:var(--indigo-light)">{{ query }}</strong>"{% endif %}
+  {% else %}
+    No results found {% if query %}for "<strong style="color:var(--indigo-light)">{{ query }}</strong>"{% endif %}
+  {% endif %}
+</div>
+
+{% if results %}
+  <div class="table-container">
+    <table aria-label="Search results">
+      <thead>
+        <tr><th>Book</th><th>Genre</th><th>ISBN</th><th>Available</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for book in results %}
+          <tr>
+            <td>
+              <div class="book-cell">
+                <div class="book-cover-mini" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">📕</div>
+                <div>
+                  <div class="book-title-text">{{ book.title }}</div>
+                  <div class="book-author-text">{{ book.author }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge badge-genre">{{ book.genre }}</span></td>
+            <td><code style="font-size:12px; color:var(--text-secondary); font-family:monospace">{{ book.isbn }}</code></td>
+            <td>
+              <span style="font-weight:600; color:{% if book.available_copies > 0 %}var(--emerald){% else %}var(--rose){% endif %}">{{ book.available_copies }}</span>
+              <span style="color:var(--text-muted); font-size:12px"> / {{ book.total_copies }}</span>
+            </td>
+            <td>
+              {% if book.available_copies == 0 %}
+                <span class="badge badge-unavailable"><span class="status-dot status-dot-red"></span>Unavailable</span>
+              {% else %}
+                <span class="badge badge-available"><span class="status-dot status-dot-green"></span>Available</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="action-icons">
+                {% if book.available_copies > 0 %}
+                  <a href="{% url 'issue_book' %}?book_id={{ book.id }}" class="icon-btn success" data-tip="Issue">📤</a>
+                {% endif %}
+                <button class="icon-btn danger" data-tip="Delete"
+                        onclick="openDeleteModal('{{ book.id }}','{{ book.title }}',{{ book.available_copies }},{{ book.total_copies }})">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="card">
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">No books found</div>
+      <div class="empty-subtitle">Try different keywords or broaden your search.</div>
+      <a href="{% url 'add_book' %}" class="btn btn-primary" style="margin-top:24px">➕ Add This Book</a>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

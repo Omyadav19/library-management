@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+db.sqlite3
+*.log
+transcript_line.txt
+test_output.html

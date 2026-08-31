@@ -1,0 +1,279 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LIBRA — Premium Library Management System. Manage books, members, and transactions beautifully.">
+  <title>{% block title %}LIBRA{% endblock %} — Library Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- Background Decorations -->
+<div class="bg-decoration">
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Flask Flash Messages as Toasts -->
+{% if messages %}
+  {% for message in messages %}
+      <div data-toast data-type="{{ message.tags }}" data-message="{{ message }}" style="display:none"></div>
+    {% endfor %}
+{% endif %}
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" style="display:none"></div>
+
+<!-- App Layout -->
+<div class="app-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+    <!-- Header -->
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon" aria-hidden="true" style="display: flex; align-items: center; justify-content: center;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background squircle -->
+            <rect width="40" height="40" rx="12" fill="#e0e7ff" />
+            
+            <!-- Bottom Book (Indigo) -->
+            <rect x="8" y="25" width="24" height="7" rx="1" fill="#6366f1" />
+            <rect x="8" y="25" width="5" height="7" fill="#4f46e5" /> <!-- Spine -->
+            <rect x="15" y="27" width="15" height="3" rx="1" fill="#ffffff" /> <!-- Pages -->
+            
+            <!-- Middle Book (Rose) -->
+            <rect x="11" y="18" width="23" height="7" rx="1" fill="#f43f5e" />
+            <rect x="11" y="18" width="5" height="7" fill="#e11d48" /> <!-- Spine -->
+            <rect x="18" y="20" width="14" height="3" rx="1" fill="#ffffff" /> <!-- Pages -->
+            
+            <!-- Bookmark (Emerald) -->
+            <path d="M22 11 L22 4 L25 6 L28 4 L28 11 Z" fill="#10b981" />
+
+            <!-- Top Book (Amber) -->
+            <rect x="6" y="11" width="24" height="7" rx="1" fill="#f59e0b" />
+            <rect x="6" y="11" width="5" height="7" fill="#d97706" /> <!-- Spine -->
+            <rect x="13" y="13" width="15" height="3" rx="1" fill="#ffffff" /> <!-- Pages -->
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-name">LIBRA</span>
+          <span class="logo-subtitle">Library Management</span>
+        </div>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">‹</button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav" aria-label="Navigation menu">
+
+      <!-- OVERVIEW -->
+      <div class="nav-section">
+        <div class="nav-section-label">Overview</div>
+        <a href="{% url 'dashboard' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+           data-tooltip="Dashboard">
+          <div class="nav-icon" aria-hidden="true">🏠</div>
+          <span class="nav-label">Dashboard</span>
+        </a>
+      </div>
+
+      <!-- LIBRARY -->
+      <div class="nav-section">
+        <div class="nav-section-label">Library</div>
+        <a href="{% url 'books' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'books' %}active{% endif %}"
+           data-tooltip="All Books">
+          <div class="nav-icon" aria-hidden="true">📚</div>
+          <span class="nav-label">All Books</span>
+        </a>
+        <a href="{% url 'add_book' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'add_book' %}active{% endif %}"
+           data-tooltip="Add Book">
+          <div class="nav-icon" aria-hidden="true">➕</div>
+          <span class="nav-label">Add Book</span>
+        </a>
+        <a href="{% url 'search' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'search' %}active{% endif %}"
+           data-tooltip="Search">
+          <div class="nav-icon" aria-hidden="true">🔎</div>
+          <span class="nav-label">Search Books</span>
+        </a>
+      </div>
+
+      <!-- TRANSACTIONS -->
+      <div class="nav-section">
+        <div class="nav-section-label">Transactions</div>
+        <a href="{% url 'issue_book' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'issue_book' %}active{% endif %}"
+           data-tooltip="Issue Book">
+          <div class="nav-icon" aria-hidden="true">📤</div>
+          <span class="nav-label">Issue Book</span>
+        </a>
+        <a href="{% url 'return_book' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'return_book' %}active{% endif %}"
+           data-tooltip="Return Book">
+          <div class="nav-icon" aria-hidden="true">📥</div>
+          <span class="nav-label">Return Book</span>
+        </a>
+        <a href="{% url 'issued' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'issued' %}active{% endif %}"
+           data-tooltip="Issued Books">
+          <div class="nav-icon" aria-hidden="true">📖</div>
+          <span class="nav-label">Issued Books</span>
+        </a>
+        <a href="{% url 'overdue' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'overdue' %}active{% endif %}"
+           data-tooltip="Overdue">
+          <div class="nav-icon" aria-hidden="true">⚠️</div>
+          <span class="nav-label">Overdue Books</span>
+        </a>
+      </div>
+
+      <!-- MEMBERS -->
+      <div class="nav-section">
+        <div class="nav-section-label">Members</div>
+        <a href="{% url 'member_history' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'member_history' %}active{% endif %}"
+           data-tooltip="Member History">
+          <div class="nav-icon" aria-hidden="true">👤</div>
+          <span class="nav-label">Member History</span>
+        </a>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div class="nav-section">
+        <div class="nav-section-label">Analytics</div>
+        <a href="{% url 'report' %}"
+           class="nav-item {% if request.resolver_match.url_name == 'report' %}active{% endif %}"
+           data-tooltip="Reports">
+          <div class="nav-icon" aria-hidden="true">📊</div>
+          <span class="nav-label">Reports</span>
+        </a>
+      </div>
+
+    </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <a href="{% url 'settings' %}"
+         class="nav-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %} mb-sm"
+         data-tooltip="Settings">
+        <div class="nav-icon" aria-hidden="true">⚙️</div>
+        <span class="nav-label">Settings</span>
+      </a>
+      <div class="sidebar-user">
+        <div class="user-avatar" aria-hidden="true">👤</div>
+        <div class="user-info">
+          <div class="user-name">Librarian</div>
+          <div class="user-role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ── -->
+  <main class="main-content" id="mainContent" role="main">
+
+    <!-- Topbar -->
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <div class="topbar-greeting">{% block greeting %}{% endblock %}</div>
+        <div class="topbar-date" id="topbarDate">{% block topdate %}{% endblock %}</div>
+      </div>
+      <div class="topbar-right">
+        <a href="{% url 'overdue' %}" class="topbar-btn" aria-label="View overdue books" title="Overdue books">
+          🔔
+          <span class="notification-dot" id="overdotEl" style="display:none"></span>
+        </a>
+        <div class="topbar-avatar" title="Librarian" aria-label="User profile">👤</div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-body page-transition">
+      {% block content %}{% endblock %}
+    </div>
+
+  </main>
+</div>
+
+<!-- Mobile Toggle -->
+<button class="mobile-toggle" id="mobileToggle" aria-label="Open menu">☰</button>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+  <div class="modal">
+    <div class="modal-icon">🗑️</div>
+    <div class="modal-title" id="deleteModalTitle">Delete this book?</div>
+    <div class="modal-subtitle">
+      Are you sure you want to permanently remove
+      <strong id="deleteBookTitle"></strong> from your library?
+      This action cannot be undone.
+    </div>
+
+    <!-- Blocked state -->
+    <div id="deleteBlockedMsg" style="display:none">
+      <div style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.2);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px;text-align:center;">
+        <div style="font-size:24px;margin-bottom:8px">🔒</div>
+        <div style="font-weight:700;color:var(--rose);margin-bottom:4px">Cannot Delete</div>
+        <div style="font-size:13px;color:var(--text-secondary)">
+          <span id="issuedCount">0</span> copy/copies are currently issued.
+          Return all copies first.
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-full" onclick="closeDeleteModal()">Close</button>
+    </div>
+
+    <!-- Confirm state -->
+      <div id="deleteConfirmSection" style="display:none">
+      <form id="deleteForm" method="POST" action="" onsubmit="event.preventDefault(); submitDelete();">
+        {% csrf_token %}
+        <input type="hidden" name="confirm" id="deleteConfirmHidden" value="">
+        <div class="form-group">
+          <label class="form-label" for="deleteConfirmInput">Type <strong>YES</strong> to confirm deletion</label>
+          <input type="text"
+                 id="deleteConfirmInput"
+                 class="form-input"
+                 placeholder="YES"
+                 autocomplete="off"
+                 spellcheck="false"
+                 aria-label="Type YES to confirm">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" style="flex:1" onclick="closeDeleteModal()">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn" style="flex:1" disabled
+                  onclick="submitDelete()">
+            Delete Book
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/app.js' %}"></script>
+{% block scripts %}{% endblock %}
+
+<script>
+// Check for overdue to show notification dot
+fetch('/overdue/').then(r => r.text()).then(html => {
+  const hasOverdue = html.includes('overdue-card');
+  const dot = document.getElementById('overdotEl');
+  if (dot && hasOverdue) dot.style.display = 'block';
+}).catch(() => {});
+</script>
+
+</body>
+</html>
