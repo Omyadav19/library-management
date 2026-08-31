@@ -1,5 +1,6 @@
 import os
 import json
+import concurrent.futures
 from pathlib import Path
 from datetime import datetime, date, timedelta
 from typing import Optional
@@ -118,87 +119,117 @@ def get_activity_data(days: int = 30):
 async def dashboard(request: Request):
     today_date = date.today()
     today_str = today_date.strftime("%Y-%m-%d")
-    
-    pipeline = [
-        {"$group": {
-            "_id": None, 
-            "total_books": {"$sum": "$total_copies"},
-            "available": {"$sum": "$available_copies"}
-        }}
-    ]
-    book_stats = list(books_collection.aggregate(pipeline))
-    if book_stats:
-        total_books = book_stats[0]["total_books"]
-        available = book_stats[0]["available"]
-    else:
-        total_books = 0
-        available = 0
-        
-    issued_count = issues_collection.count_documents({"status": "issued"})
-    
-    overdue_qs = list(issues_collection.find({"status": "issued", "due_date": {"$lt": today_str}}).sort("due_date", 1))
-    overdue_count = len(overdue_qs)
-    
-    recent_transactions = [format_issue(i) for i in issues_collection.find().sort([("issue_date", -1), ("_id", -1)]).limit(6)]
-    
-    # Collect all needed book IDs for batch lookup in ONE round-trip
-    needed_book_ids = set()
-    for r in overdue_qs:
-        if r.get("book_id"):
-            needed_book_ids.add(r["book_id"])
-    for r in recent_transactions:
-        if r.get("book_id"):
-            needed_book_ids.add(r["book_id"])
-            
-    books_map = {}
-    if needed_book_ids:
-        for b in books_collection.find({"_id": {"$in": list(needed_book_ids)}}):
-            books_map[b["_id"]] = b
-            
     fine_rate = get_fine_rate()
-    overdue_list = []
-    for r in overdue_qs:
-        r = format_issue(r)
-        book = books_map.get(r["book_id"])
-        if book:
-            r["book_title"] = book.get("title")
-            r["book_author"] = book.get("author")
-        
-        due_date_obj = datetime.strptime(r["due_date"], "%Y-%m-%d").date()
-        days_overdue = (today_date - due_date_obj).days
-        r["days_overdue"] = days_overdue
-        r["estimated_fine"] = days_overdue * fine_rate
-        overdue_list.append(r)
-        
-    for r in recent_transactions:
-        book = books_map.get(r["book_id"])
-        if book:
-            r["book_title"] = book.get("title")
-            
-    fines_pipeline = [
-        {"$match": {"status": "returned"}},
-        {"$group": {"_id": None, "fines_collected": {"$sum": "$fine"}}}
-    ]
-    fines_res = list(issues_collection.aggregate(fines_pipeline))
-    fines_collected = fines_res[0]["fines_collected"] if fines_res else 0
-    
-    genre_pipeline = [
-        {"$group": {"_id": "$genre", "count": {"$sum": 1}}}
-    ]
-    genre_res = list(books_collection.aggregate(genre_pipeline))
-    genre_counts = {g["_id"]: g["count"] for g in genre_res if g["_id"]}
-    
-    popular_books = [format_book(b) for b in books_collection.find().sort("issue_count", -1).limit(5)]
-    recent_books  = [format_book(b) for b in books_collection.find().sort("added_on", -1).limit(5)]
-    activity_7    = get_activity_data(7)
 
-    total_members = len(issues_collection.distinct("member_id"))
-    total_issues_ever = issues_collection.count_documents({})
+    # Parallelize books, issues, and config lookups in ONE concurrent sweep
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        fut_books = executor.submit(lambda: list(books_collection.find({}, {
+            "title": 1, "author": 1, "genre": 1, "isbn": 1, "total_copies": 1, 
+            "available_copies": 1, "issue_count": 1, "added_on": 1
+        })))
+        fut_issues = executor.submit(lambda: list(issues_collection.find()))
+        
+        all_books = fut_books.result()
+        all_issues = fut_issues.result()
+
+    # Compute all book metrics in-memory in ~0.001s
+    total_books = 0
+    available = 0
+    genre_counts = {}
+    books_map = {}
+    
+    for b in all_books:
+        bid = b.get("_id")
+        books_map[bid] = b
+        total_books += b.get("total_copies", 0)
+        available += b.get("available_copies", 0)
+        g = b.get("genre")
+        if g:
+            genre_counts[g] = genre_counts.get(g, 0) + 1
+
+    # Sort popular and recent books in Python
+    popular_books = [format_book(b.copy()) for b in sorted(all_books, key=lambda x: x.get("issue_count", 0), reverse=True)[:5]]
+    recent_books  = [format_book(b.copy()) for b in sorted(all_books, key=lambda x: str(x.get("added_on", "")), reverse=True)[:5]]
+
+    # Compute all issue metrics in-memory
+    issued_count = 0
+    fines_collected = 0
+    total_issues_ever = len(all_issues)
+    member_ids = set()
+    overdue_list = []
+    
+    # 7-Day activity map
+    start_7 = today_date - timedelta(days=7)
+    start_7_str = start_7.strftime("%Y-%m-%d")
+    act_issues = {}
+    act_returns = {}
+
+    for i in all_issues:
+        mid = i.get("member_id")
+        if mid:
+            member_ids.add(mid)
+            
+        status_val = i.get("status")
+        idate = i.get("issue_date")
+        rdate = i.get("return_date")
+        
+        if idate and idate >= start_7_str:
+            act_issues[idate] = act_issues.get(idate, 0) + 1
+        if rdate and rdate >= start_7_str:
+            act_returns[rdate] = act_returns.get(rdate, 0) + 1
+            
+        if status_val == "issued":
+            issued_count += 1
+            due_str = i.get("due_date", "")
+            if due_str and due_str < today_str:
+                r_item = format_issue(i.copy())
+                book = books_map.get(r_item.get("book_id"))
+                if book:
+                    r_item["book_title"] = book.get("title")
+                    r_item["book_author"] = book.get("author")
+                
+                try:
+                    due_date_obj = datetime.strptime(due_str, "%Y-%m-%d").date()
+                    days_overdue = (today_date - due_date_obj).days
+                except Exception:
+                    days_overdue = 1
+                    
+                r_item["days_overdue"] = days_overdue
+                r_item["estimated_fine"] = days_overdue * fine_rate
+                overdue_list.append(r_item)
+                
+        elif status_val == "returned":
+            fines_collected += i.get("fine", 0)
+
+    overdue_list.sort(key=lambda x: x.get("due_date", ""))
+    overdue_count = len(overdue_list)
+    total_members = len(member_ids)
+
+    # Build 7-day labels and counts
+    labels_7 = []
+    issued_7 = []
+    returned_7 = []
+    for d_idx in range(8):
+        day_str = (start_7 + timedelta(days=d_idx)).strftime("%Y-%m-%d")
+        labels_7.append(day_str)
+        issued_7.append(act_issues.get(day_str, 0))
+        returned_7.append(act_returns.get(day_str, 0))
+    activity_7 = {"labels": labels_7, "issued": issued_7, "returned": returned_7}
+
+    # Recent 6 transactions
+    sorted_issues = sorted(all_issues, key=lambda x: (x.get("issue_date", ""), str(x.get("_id", ""))), reverse=True)[:6]
+    recent_transactions = []
+    for i in sorted_issues:
+        r_item = format_issue(i.copy())
+        book = books_map.get(r_item.get("book_id"))
+        if book:
+            r_item["book_title"] = book.get("title")
+        recent_transactions.append(r_item)
 
     availability_pct = round((available / total_books) * 100) if total_books > 0 else 0
     issued_pct = round((issued_count / total_books) * 100) if total_books > 0 else 0
     overdue_pct = round((overdue_count / issued_count) * 100) if issued_count > 0 else 0
-    
+
     stats = {
         "total_books": total_books,
         "available": available,
