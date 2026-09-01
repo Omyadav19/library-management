@@ -1807,20 +1807,29 @@ tbody td {
     color: white;
     cursor: pointer;
   }
-
-  .sidebar-overlay {
-    display: block !important;
-  }
 }
 
-.mobile-toggle { display: none; }
+.mobile-toggle { 
+  display: none; 
+}
+
 .sidebar-overlay {
-  display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 99;
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-base), visibility var(--transition-base);
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
 }
 
 @media (max-width: 480px) {

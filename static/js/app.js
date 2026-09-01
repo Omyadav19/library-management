@@ -34,14 +34,22 @@ sidebarToggle?.addEventListener('click', () => {
 });
 
 mobileToggle?.addEventListener('click', () => {
-  sidebar?.classList.toggle('mobile-open');
-  sidebarOverlay?.classList.toggle('active');
-  sidebarOverlay.style.display = sidebar?.classList.contains('mobile-open') ? 'block' : 'none';
+  const isOpen = sidebar?.classList.toggle('mobile-open');
+  if (sidebarOverlay) {
+    sidebarOverlay.classList.toggle('active', !!isOpen);
+  }
 });
 
 sidebarOverlay?.addEventListener('click', () => {
   sidebar?.classList.remove('mobile-open');
-  sidebarOverlay.style.display = 'none';
+  sidebarOverlay?.classList.remove('active');
+});
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    sidebar?.classList.remove('mobile-open');
+    sidebarOverlay?.classList.remove('active');
+  }
 });
 
 applySidebar();
